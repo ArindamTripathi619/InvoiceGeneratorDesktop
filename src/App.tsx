@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Settings as SettingsIcon, Users, History, Moon, Sun } from 'lucide-react';
 import InvoiceForm from './components/InvoiceForm';
 import Settings from './components/Settings';
 import InvoiceHistory from './components/InvoiceHistory';
 import CustomerManagement from './components/CustomerManagement';
+import SplashScreen from './components/SplashScreen';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import packageJson from '../package.json';
 
@@ -11,7 +12,26 @@ type TabType = 'create' | 'history' | 'customers' | 'settings';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<TabType>('create');
+  const [showSplash, setShowSplash] = useState(true);
   const { theme, toggleTheme } = useTheme();
+
+  // Check if splash has been shown in this session
+  useEffect(() => {
+    const splashShown = sessionStorage.getItem('splashShown');
+    if (splashShown === 'true') {
+      setShowSplash(false);
+    }
+  }, []);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+    sessionStorage.setItem('splashShown', 'true');
+  };
+
+  // Show splash screen on cold start
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} theme={theme} />;
+  }
 
   const tabs = [
     { id: 'create' as TabType, label: 'Create Invoice', icon: FileText },
