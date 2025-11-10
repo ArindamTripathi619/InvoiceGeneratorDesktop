@@ -48,3 +48,15 @@ coverage/
 *.tmp
 *.temp
 *~
+
+# Release artifacts (upload to GitHub Releases, don't commit)
+CHECKSUMS.txt
+*.msi
+*.exe
+*.dmg
+*.deb
+*.rpm
+*.AppImage
+
+# Docs
+docs/

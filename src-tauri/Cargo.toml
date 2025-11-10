@@ -2,9 +2,9 @@
 name = "invoice-generator-desktop"
 version = "1.0.0"
 description = "Desktop Invoice Generator for Apex Solar"
-authors = ["Apex Solar"]
-license = ""
-repository = ""
+authors = ["DevCrewX"]
+license = "MIT"
+repository = "https://github.com/ArindamTripathi619/InvoiceGeneratorDesktop"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

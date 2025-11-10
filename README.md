@@ -1,6 +1,15 @@
 # Apex Solar Invoice Generator - Desktop Application
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/ArindamTripathi619/InvoiceGeneratorDesktop/releases)
+[![Platform](https://img.shields.io/badge/platform-Windows-0078D6.svg)](https://www.microsoft.com/windows)
+[![Tauri](https://img.shields.io/badge/Tauri-1.5-FFC131.svg)](https://tauri.app/)
+
 A professional Windows desktop application for generating and managing invoices for Apex Solar. Built with Tauri, React, TypeScript, and Tailwind CSS.
+
+## 🎉 Version 1.0.0 Release
+
+The first stable release is here! See [RELEASE_v1.0.0.md](./RELEASE_v1.0.0.md) for full release notes.
 
 ## 🚀 Features
 
