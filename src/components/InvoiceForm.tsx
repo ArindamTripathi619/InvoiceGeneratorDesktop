@@ -302,18 +302,18 @@ export default function InvoiceForm() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-sm">
+    <div className="max-w-7xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Create Invoice</h1>
-        <p className="text-gray-600">Generate professional invoices for Apex Solar</p>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 transition-colors duration-200">Create Invoice</h1>
+        <p className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Generate professional invoices for Apex Solar</p>
       </div>
 
       <div className="space-y-8">
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Invoice Details</h2>
+        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg transition-colors duration-200">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Invoice Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                 Invoice Number <span className="text-red-500">*</span>
               </label>
               <input
@@ -321,39 +321,39 @@ export default function InvoiceForm() {
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
                 placeholder="022"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-500 transition-colors duration-200 mt-1">
                 Will be formatted as: AS/{financialYear}/{invoiceNumber || 'XXX'}
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                 Financial Year
               </label>
               <input
                 type="text"
                 value={financialYear}
                 disabled
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400 transition-colors duration-200"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                 Invoice Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 value={invoiceDate}
                 onChange={(e) => setInvoiceDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                 Work Order Reference
               </label>
               <input
@@ -361,34 +361,34 @@ export default function InvoiceForm() {
                 value={workOrderReference}
                 onChange={(e) => setWorkOrderReference(e.target.value)}
                 placeholder="NIPL/RTS/002/35 Kwp/I & C/24-25/"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                 Work Order Date
               </label>
               <input
                 type="date"
                 value={workOrderDate}
                 onChange={(e) => setWorkOrderDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
               />
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Customer Details</h2>
+        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg transition-colors duration-200">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Customer Details</h2>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
               Select Existing Customer (Optional)
             </label>
             <select
               value={selectedCustomerId}
               onChange={(e) => handleCustomerSelect(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
             >
               <option value="">-- New Customer --</option>
               {customers.map(customer => (
@@ -401,7 +401,7 @@ export default function InvoiceForm() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                 Company Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -409,13 +409,13 @@ export default function InvoiceForm() {
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="NIMBUS IRRIGATION PVT.LTD."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   Address Line 1 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -423,11 +423,11 @@ export default function InvoiceForm() {
                   value={addressLine1}
                   onChange={(e) => setAddressLine1(e.target.value)}
                   placeholder="Suit No. #705, South City Business Park"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   Address Line 2
                 </label>
                 <input
@@ -435,14 +435,14 @@ export default function InvoiceForm() {
                   value={addressLine2}
                   onChange={(e) => setAddressLine2(e.target.value)}
                   placeholder="7th Floor 770, Eastern Metropolitan Bypass"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   Address Line 3
                 </label>
                 <input
@@ -450,11 +450,11 @@ export default function InvoiceForm() {
                   value={addressLine3}
                   onChange={(e) => setAddressLine3(e.target.value)}
                   placeholder="Additional address info"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   City
                 </label>
                 <input
@@ -462,11 +462,11 @@ export default function InvoiceForm() {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Kolkata"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   State
                 </label>
                 <input
@@ -474,14 +474,14 @@ export default function InvoiceForm() {
                   value={state}
                   onChange={(e) => setState(e.target.value)}
                   placeholder="West Bengal"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   Pincode
                 </label>
                 <input
@@ -489,11 +489,11 @@ export default function InvoiceForm() {
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value)}
                   placeholder="700107"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   GST Number
                 </label>
                 <input
@@ -501,11 +501,11 @@ export default function InvoiceForm() {
                   value={gstNumber}
                   onChange={(e) => setGstNumber(e.target.value)}
                   placeholder="19AACN8612L1Z5"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   PAN Number
                 </label>
                 <input
@@ -513,19 +513,19 @@ export default function InvoiceForm() {
                   value={panNumber}
                   onChange={(e) => setPanNumber(e.target.value)}
                   placeholder="AAACN8612L"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg transition-colors duration-200">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Service Line Items</h2>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 transition-colors duration-200">Service Line Items</h2>
             <button
               onClick={addLineItem}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-200 transition-colors"
             >
               <Plus size={20} />
               Add Item
@@ -534,9 +534,9 @@ export default function InvoiceForm() {
 
           <div className="space-y-4">
             {lineItems.map((item) => (
-              <div key={item.id} className="bg-white p-4 rounded-lg border border-gray-200">
+              <div key={item.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-200">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-medium text-gray-700">Item {item.serialNumber}</h3>
+                  <h3 className="font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">Item {item.serialNumber}</h3>
                   {lineItems.length > 1 && (
                     <button
                       onClick={() => removeLineItem(item.id)}
@@ -549,7 +549,7 @@ export default function InvoiceForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                       Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -557,12 +557,12 @@ export default function InvoiceForm() {
                       onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
                       rows={3}
                       placeholder="Installation, testing & commissioning include lifting of all materials from site store to actual installation site for 35 kwp Rooftop Solar Power plant..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                       HSN/SAC Code
                     </label>
                     <input
@@ -570,12 +570,12 @@ export default function InvoiceForm() {
                       value={item.hsnSacCode}
                       onChange={(e) => updateLineItem(item.id, 'hsnSacCode', e.target.value)}
                       placeholder="995444"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                       Unit
                     </label>
                     <input
@@ -583,12 +583,12 @@ export default function InvoiceForm() {
                       value={item.unit}
                       onChange={(e) => updateLineItem(item.id, 'unit', e.target.value)}
                       placeholder="kWp"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                       Rate (Rs.) <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -597,12 +597,12 @@ export default function InvoiceForm() {
                       value={item.rate}
                       onChange={(e) => updateLineItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
                       placeholder="1.50"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                       Quantity <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -611,19 +611,19 @@ export default function InvoiceForm() {
                       value={item.quantity}
                       onChange={(e) => updateLineItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
                       placeholder="35"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                       Amount (Rs.)
                     </label>
                     <input
                       type="text"
                       value={item.amount.toFixed(2)}
                       disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 font-semibold"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400 transition-colors duration-200 font-semibold"
                     />
                   </div>
                 </div>
@@ -632,13 +632,13 @@ export default function InvoiceForm() {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Financial Summary</h2>
+        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg transition-colors duration-200">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Financial Summary</h2>
 
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   CGST Percentage
                 </label>
                 <input
@@ -646,11 +646,11 @@ export default function InvoiceForm() {
                   step="0.01"
                   value={cgstPercentage}
                   onChange={(e) => setCgstPercentage(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                   SGST Percentage
                 </label>
                 <input
@@ -658,34 +658,34 @@ export default function InvoiceForm() {
                   step="0.01"
                   value={sgstPercentage}
                   onChange={(e) => setSgstPercentage(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border-2 border-blue-200">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-400 transition-colors duration-200">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">Total Basic Amount:</span>
-                  <span className="font-semibold text-gray-900">Rs. {totals.totalBasicAmount.toFixed(2)}</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">Total Basic Amount:</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Rs. {totals.totalBasicAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">CGST ({cgstPercentage}%):</span>
-                  <span className="font-semibold text-gray-900">Rs. {totals.cgstAmount.toFixed(2)}</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">CGST ({cgstPercentage}%):</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Rs. {totals.cgstAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">SGST ({sgstPercentage}%):</span>
-                  <span className="font-semibold text-gray-900">Rs. {totals.sgstAmount.toFixed(2)}</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">SGST ({sgstPercentage}%):</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Rs. {totals.sgstAmount.toFixed(2)}</span>
                 </div>
-                <div className="border-t-2 border-gray-200 pt-2 mt-2">
+                <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-2 mt-2">
                   <div className="flex justify-between text-lg">
-                    <span className="font-bold text-gray-800">Grand Total:</span>
-                    <span className="font-bold text-blue-600">Rs. {totals.grandTotal.toFixed(2)}</span>
+                    <span className="font-bold text-gray-800 dark:text-gray-200 transition-colors duration-200">Grand Total:</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400 transition-colors duration-200">Rs. {totals.grandTotal.toFixed(2)}</span>
                   </div>
                 </div>
-                <div className="mt-3 p-3 bg-blue-50 rounded">
-                  <p className="text-xs font-medium text-gray-700">Amount in Words:</p>
-                  <p className="text-sm font-semibold text-blue-900 mt-1">
+                <div className="mt-3 p-3 bg-blue-50 dark:bg-gray-700 rounded transition-colors duration-200">
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">Amount in Words:</p>
+                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-300 mt-1 transition-colors duration-200">
                     {numberToWordsIndian(totals.grandTotal)}
                   </p>
                 </div>

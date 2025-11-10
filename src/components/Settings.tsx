@@ -151,88 +151,88 @@ export default function Settings() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-sm">
+    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Company Settings</h1>
-        <p className="text-gray-600">Manage bank details and upload stamp & signature</p>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 transition-colors duration-200">Company Settings</h1>
+        <p className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Manage bank details and upload stamp & signature</p>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center items-center py-12">
           <Loader2 size={48} className="text-blue-600 animate-spin" />
-          <span className="ml-3 text-gray-600">Loading settings...</span>
+          <span className="ml-3 text-gray-600 dark:text-gray-400 transition-colors duration-200">Loading settings...</span>
         </div>
       ) : (
         <div className="space-y-8">
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Bank Account Details</h2>
+        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Bank Account Details</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
                 Account Name
               </label>
               <input
                 type="text"
                 value={settings.accountName}
                 onChange={(e) => setSettings({ ...settings, accountName: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
                 Bank Name
               </label>
               <input
                 type="text"
                 value={settings.bankName}
                 onChange={(e) => setSettings({ ...settings, bankName: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
                   IFSC Code
                 </label>
                 <input
                   type="text"
                   value={settings.ifscCode}
                   onChange={(e) => setSettings({ ...settings, ifscCode: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
                   Account Number
                 </label>
                 <input
                   type="text"
                   value={settings.accountNumber}
                   onChange={(e) => setSettings({ ...settings, accountNumber: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
                 GST Number
               </label>
               <input
                 type="text"
                 value={settings.gstNumber}
                 onChange={(e) => setSettings({ ...settings, gstNumber: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
               />
             </div>
 
             <button
               onClick={handleSaveSettings}
               disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <>
@@ -249,15 +249,15 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Company Logo</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Company Logo</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 transition-colors duration-200">
             Upload your company logo for the letterhead. This will appear at the top of all generated invoices.
           </p>
 
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+              <label className="flex items-center gap-2 px-6 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                 {isUploadingLogo ? (
                   <>
                     <Loader2 size={20} className="animate-spin" />
@@ -277,7 +277,7 @@ export default function Settings() {
                   className="hidden"
                 />
               </label>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
                 Recommended: PNG or JPG format
               </span>
             </div>
@@ -285,7 +285,7 @@ export default function Settings() {
             {logoPreviewUrl ? (
               <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
                 <p className="text-sm font-medium text-gray-700 mb-3">Current Company Logo:</p>
-                <div className="flex justify-center items-center p-4 bg-gray-50 rounded">
+                <div className="flex justify-center items-center p-4 bg-gray-50 dark:bg-gray-700 rounded">
                   <img
                     src={logoPreviewUrl}
                     alt="Company Logo"
@@ -294,24 +294,24 @@ export default function Settings() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white p-8 rounded-lg border-2 border-dashed border-gray-300 text-center">
-                <ImageIcon size={48} className="mx-auto text-gray-400 mb-3" />
-                <p className="text-gray-500">No company logo uploaded</p>
-                <p className="text-sm text-gray-400 mt-1">Upload an image to see preview</p>
+              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 text-center transition-colors duration-200">
+                <ImageIcon size={48} className="mx-auto text-gray-400 dark:text-gray-500 mb-3 transition-colors duration-200" />
+                <p className="text-gray-500 dark:text-gray-400 transition-colors duration-200">No company logo uploaded</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 transition-colors duration-200">Upload an image to see preview</p>
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Stamp & Signature</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Stamp & Signature</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 transition-colors duration-200">
             Upload a transparent PNG image containing your stamp and signature. This will appear on all generated invoices.
           </p>
 
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+              <label className="flex items-center gap-2 px-6 py-3 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-all duration-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                 {isUploadingStamp ? (
                   <>
                     <Loader2 size={20} className="animate-spin" />
@@ -331,7 +331,7 @@ export default function Settings() {
                   className="hidden"
                 />
               </label>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
                 Recommended: PNG with transparent background
               </span>
             </div>
@@ -339,7 +339,7 @@ export default function Settings() {
             {previewUrl ? (
               <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
                 <p className="text-sm font-medium text-gray-700 mb-3">Current Stamp & Signature:</p>
-                <div className="flex justify-center items-center p-4 bg-gray-50 rounded">
+                <div className="flex justify-center items-center p-4 bg-gray-50 dark:bg-gray-700 rounded">
                   <img
                     src={previewUrl}
                     alt="Stamp and Signature"
@@ -348,10 +348,10 @@ export default function Settings() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white p-8 rounded-lg border-2 border-dashed border-gray-300 text-center">
-                <ImageIcon size={48} className="mx-auto text-gray-400 mb-3" />
-                <p className="text-gray-500">No stamp & signature uploaded</p>
-                <p className="text-sm text-gray-400 mt-1">Upload an image to see preview</p>
+              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 text-center transition-colors duration-200">
+                <ImageIcon size={48} className="mx-auto text-gray-400 dark:text-gray-500 mb-3 transition-colors duration-200" />
+                <p className="text-gray-500 dark:text-gray-400 transition-colors duration-200">No stamp & signature uploaded</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 transition-colors duration-200">Upload an image to see preview</p>
               </div>
             )}
           </div>

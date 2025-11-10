@@ -95,10 +95,10 @@ export default function InvoiceHistory() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-sm">
+    <div className="max-w-7xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Invoice History</h1>
-        <p className="text-gray-600">View and manage all generated invoices</p>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 transition-colors duration-200">Invoice History</h1>
+        <p className="text-gray-600 dark:text-gray-400 transition-colors duration-200">View and manage all generated invoices</p>
       </div>
 
       <div className="mb-6">
@@ -117,12 +117,12 @@ export default function InvoiceHistory() {
       {isLoading ? (
         <div className="flex justify-center items-center py-12">
           <Loader2 size={48} className="text-blue-600 animate-spin" />
-          <span className="ml-3 text-gray-600">Loading invoices...</span>
+          <span className="ml-3 text-gray-600 dark:text-gray-400 transition-colors duration-200">Loading invoices...</span>
         </div>
       ) : filteredInvoices.length === 0 ? (
         <div className="text-center py-12">
-          <FileText size={64} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500 text-lg">
+          <FileText size={64} className="mx-auto text-gray-300 dark:text-gray-600 transition-colors duration-200 mb-4" />
+          <p className="text-gray-500 dark:text-gray-400 transition-colors duration-200 text-lg">
             {searchTerm ? 'No invoices found matching your search' : 'No invoices generated yet'}
           </p>
           <p className="text-gray-400 mt-2">
@@ -134,7 +134,7 @@ export default function InvoiceHistory() {
           {filteredInvoices.map((invoice) => (
             <div
               key={invoice.id}
-              className="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
+              className="bg-gray-50 dark:bg-gray-700 dark:bg-gray-700 p-6 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors duration-200 hover:border-blue-300 transition-colors"
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -147,12 +147,12 @@ export default function InvoiceHistory() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
-                      <p className="text-sm text-gray-600">Customer</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Customer</p>
                       <p className="font-medium text-gray-800">{invoice.customer.companyName}</p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-gray-600">Invoice Date</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Invoice Date</p>
                       <p className="font-medium text-gray-800">
                         {new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}
                       </p>
@@ -160,13 +160,13 @@ export default function InvoiceHistory() {
 
                     {invoice.workOrderReference && (
                       <div>
-                        <p className="text-sm text-gray-600">Work Order</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Work Order</p>
                         <p className="font-medium text-gray-800">{invoice.workOrderReference}</p>
                       </div>
                     )}
 
                     <div>
-                      <p className="text-sm text-gray-600">Grand Total</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Grand Total</p>
                       <p className="font-semibold text-blue-600 text-lg">
                         Rs. {invoice.grandTotal.toFixed(2)}
                       </p>
@@ -174,7 +174,7 @@ export default function InvoiceHistory() {
                   </div>
 
                   <div className="mt-4">
-                    <p className="text-sm text-gray-600">Line Items</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Line Items</p>
                     <p className="text-sm text-gray-800">
                       {invoice.lineItems.length} item(s) - Total Basic: Rs. {invoice.totalBasicAmount.toFixed(2)}
                     </p>
@@ -185,7 +185,7 @@ export default function InvoiceHistory() {
                   <button
                     onClick={() => handleRegeneratePDF(invoice)}
                     disabled={generatingPdfId === invoice.id}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-all duration-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Download PDF"
                   >
                     {generatingPdfId === invoice.id ? (
@@ -202,7 +202,7 @@ export default function InvoiceHistory() {
                   </button>
                   <button
                     onClick={() => invoice.id && handleDeleteInvoice(invoice.id, invoice.invoiceNumber, invoice.financialYear)}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-all duration-200 transition-colors"
                     title="Delete Invoice"
                   >
                     <Trash2 size={18} />
