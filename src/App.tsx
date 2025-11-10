@@ -43,35 +43,51 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 transition-colors duration-200">
       <header className="bg-white dark:bg-gray-800 shadow-md border-b-2 border-blue-500 dark:border-blue-600 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 lg:py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-3 rounded-lg">
-                <FileText size={32} />
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 min-w-0">
+              <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-1.5 sm:p-2 md:p-2.5 lg:p-3 rounded-lg flex-shrink-0">
+                <FileText size={20} className="md:hidden" />
+                <FileText size={24} className="hidden md:block lg:hidden" />
+                <FileText size={32} className="hidden lg:block" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors duration-200">Apex Solar</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Invoice Generation System - Desktop v{packageJson.version}</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors duration-200 truncate">
+                  Apex Solar
+                </h1>
+                <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200 hidden sm:block truncate">
+                  Invoice System v{packageJson.version}
+                </p>
               </div>
             </div>
             <button
               onClick={toggleTheme}
-              className="p-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+              className="p-1.5 sm:p-2 md:p-2.5 lg:p-3 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 flex-shrink-0"
               title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
               {theme === 'light' ? (
-                <Moon size={24} className="text-gray-700 dark:text-gray-300" />
+                <Moon size={16} className="md:hidden text-gray-700" />
               ) : (
-                <Sun size={24} className="text-gray-300" />
+                <Sun size={16} className="md:hidden text-gray-300" />
+              )}
+              {theme === 'light' ? (
+                <Moon size={20} className="hidden md:block lg:hidden text-gray-700" />
+              ) : (
+                <Sun size={20} className="hidden md:block lg:hidden text-gray-300" />
+              )}
+              {theme === 'light' ? (
+                <Moon size={24} className="hidden lg:block text-gray-700 dark:text-gray-300" />
+              ) : (
+                <Sun size={24} className="hidden lg:block text-gray-300" />
               )}
             </button>
           </div>
         </div>
       </header>
 
-      <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-1">
+      <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 transition-colors duration-200 overflow-x-auto">
+        <div className="max-w-7xl mx-auto px-0.5 sm:px-1 md:px-2 lg:px-6">
+          <div className="flex gap-0.5 sm:gap-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -79,14 +95,15 @@ function AppContent() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-1.5 sm:px-2 md:px-3 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-4 font-medium transition-all whitespace-nowrap ${
                     isActive
                       ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-gray-700'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
+                  title={tab.label}
                 >
-                  <Icon size={20} />
-                  <span>{tab.label}</span>
+                  <Icon size={16} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5" />
+                  <span className="hidden lg:inline text-sm">{tab.label}</span>
                 </button>
               );
             })}
@@ -94,20 +111,21 @@ function AppContent() {
         </div>
       </nav>
 
-      <main className="py-8">
+      <main className="py-2 sm:py-4 md:py-8">
         {activeTab === 'create' && <InvoiceForm />}
         {activeTab === 'history' && <InvoiceHistory />}
         {activeTab === 'customers' && <CustomerManagement />}
         {activeTab === 'settings' && <Settings />}
       </main>
 
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="text-center text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-4 sm:mt-8 md:mt-12 transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-3 sm:py-4 md:py-6">
+          <div className="text-center text-[10px] sm:text-xs md:text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
             <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">APEX SOLAR</p>
-            <p>Ramkrishna Nagar, Paschimpara, P.O.- Panchpota, P.S.- Sonarpur, Kolkata - 700 152</p>
-            <p className="mt-2">Ph: +91-97327 33031 | E-mail: partha.apexsolar@gmail.com</p>
-            <p className="mt-3 text-xs text-gray-500 dark:text-gray-500">Solar Power Plant Installation and Commissioning</p>
+            <p className="hidden md:block">Ramkrishna Nagar, Paschimpara, P.O.- Panchpota, P.S.- Sonarpur, Kolkata - 700 152</p>
+            <p className="md:hidden text-[10px]">Kolkata - 700 152</p>
+            <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs">Ph: +91-97327 33031</p>
+            <p className="hidden sm:block text-[10px]">Solar Power Plant Installation</p>
           </div>
         </div>
       </footer>

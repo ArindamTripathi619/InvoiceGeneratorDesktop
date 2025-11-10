@@ -145,7 +145,7 @@ export default function CustomerManagement() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
+    <div className="max-w-7xl mx-auto p-2 sm:p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div>

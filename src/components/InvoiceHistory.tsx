@@ -95,7 +95,7 @@ export default function InvoiceHistory() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
+    <div className="max-w-7xl mx-auto p-2 sm:p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 transition-colors duration-200">Invoice History</h1>
         <p className="text-gray-600 dark:text-gray-400 transition-colors duration-200">View and manage all generated invoices</p>

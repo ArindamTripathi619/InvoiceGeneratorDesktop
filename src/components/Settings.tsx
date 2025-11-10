@@ -151,7 +151,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
+    <div className="max-w-4xl mx-auto p-2 sm:p-4 md:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 transition-colors duration-200">Company Settings</h1>
         <p className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Manage bank details and upload stamp & signature</p>
