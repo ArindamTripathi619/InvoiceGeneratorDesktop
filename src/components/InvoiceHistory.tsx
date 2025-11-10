@@ -103,13 +103,13 @@ export default function InvoiceHistory() {
 
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-200" size={20} />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by invoice number, customer name, or work order..."
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
           />
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function InvoiceHistory() {
           <p className="text-gray-500 dark:text-gray-400 transition-colors duration-200 text-lg">
             {searchTerm ? 'No invoices found matching your search' : 'No invoices generated yet'}
           </p>
-          <p className="text-gray-400 mt-2">
+          <p className="text-gray-400 dark:text-gray-500 transition-colors duration-200 mt-2">
             {searchTerm ? 'Try a different search term' : 'Create your first invoice to get started'}
           </p>
         </div>
@@ -140,7 +140,7 @@ export default function InvoiceHistory() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <FileText size={24} className="text-blue-600" />
-                    <h3 className="text-lg font-semibold text-gray-800">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 transition-colors duration-200">
                       AS/{invoice.financialYear}/{invoice.invoiceNumber}
                     </h3>
                   </div>
@@ -148,12 +148,12 @@ export default function InvoiceHistory() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Customer</p>
-                      <p className="font-medium text-gray-800">{invoice.customer.companyName}</p>
+                      <p className="font-medium text-gray-800 dark:text-gray-100 transition-colors duration-200">{invoice.customer.companyName}</p>
                     </div>
 
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Invoice Date</p>
-                      <p className="font-medium text-gray-800">
+                      <p className="font-medium text-gray-800 dark:text-gray-100 transition-colors duration-200">
                         {new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}
                       </p>
                     </div>
@@ -161,7 +161,7 @@ export default function InvoiceHistory() {
                     {invoice.workOrderReference && (
                       <div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Work Order</p>
-                        <p className="font-medium text-gray-800">{invoice.workOrderReference}</p>
+                        <p className="font-medium text-gray-800 dark:text-gray-100 transition-colors duration-200">{invoice.workOrderReference}</p>
                       </div>
                     )}
 
@@ -175,7 +175,7 @@ export default function InvoiceHistory() {
 
                   <div className="mt-4">
                     <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Line Items</p>
-                    <p className="text-sm text-gray-800">
+                    <p className="text-sm text-gray-800 dark:text-gray-100 transition-colors duration-200">
                       {invoice.lineItems.length} item(s) - Total Basic: Rs. {invoice.totalBasicAmount.toFixed(2)}
                     </p>
                   </div>
@@ -215,7 +215,7 @@ export default function InvoiceHistory() {
       )}
 
       {filteredInvoices.length > 0 && (
-        <div className="mt-6 text-center text-sm text-gray-500">
+        <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
           Showing {filteredInvoices.length} of {invoices.length} invoice(s)
         </div>
       )}

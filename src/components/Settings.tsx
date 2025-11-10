@@ -168,7 +168,7 @@ export default function Settings() {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Bank Account Details</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">
                 Account Name
               </label>
               <input
@@ -180,7 +180,7 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">
                 Bank Name
               </label>
               <input
@@ -193,7 +193,7 @@ export default function Settings() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">
                   IFSC Code
                 </label>
                 <input
@@ -205,7 +205,7 @@ export default function Settings() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">
                   Account Number
                 </label>
                 <input
@@ -218,7 +218,7 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200 mb-2 transition-colors duration-200">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">
                 GST Number
               </label>
               <input
@@ -283,9 +283,9 @@ export default function Settings() {
             </div>
 
             {logoPreviewUrl ? (
-              <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-3">Current Company Logo:</p>
-                <div className="flex justify-center items-center p-4 bg-gray-50 dark:bg-gray-700 rounded">
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 transition-colors duration-200">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 transition-colors duration-200">Current Company Logo:</p>
+                <div className="flex justify-center items-center p-4 bg-gray-50 dark:bg-gray-700 rounded transition-colors duration-200">
                   <img
                     src={logoPreviewUrl}
                     alt="Company Logo"
@@ -337,9 +337,9 @@ export default function Settings() {
             </div>
 
             {previewUrl ? (
-              <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-3">Current Stamp & Signature:</p>
-                <div className="flex justify-center items-center p-4 bg-gray-50 dark:bg-gray-700 rounded">
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 transition-colors duration-200">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 transition-colors duration-200">Current Stamp & Signature:</p>
+                <div className="flex justify-center items-center p-4 bg-gray-50 dark:bg-gray-700 rounded transition-colors duration-200">
                   <img
                     src={previewUrl}
                     alt="Stamp and Signature"
