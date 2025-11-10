@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Trash2, CreditCard as Edit2, X, Save } from 'lucide-react';
+import { Users, Plus, Trash2, CreditCard as Edit2, X, Save, Loader2 } from 'lucide-react';
+import { ask, message } from '@tauri-apps/api/dialog';
 import { Customer } from '../types/invoice';
 import { getAllCustomers, saveCustomer, deleteCustomer } from '../utils/tauriStorage';
 
@@ -7,6 +8,8 @@ export default function CustomerManagement() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isAddingCustomer, setIsAddingCustomer] = useState<boolean>(false);
   const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const [formData, setFormData] = useState<Omit<Customer, 'id'>>({
     companyName: '',
@@ -25,7 +28,15 @@ export default function CustomerManagement() {
   }, []);
 
   const loadCustomers = async () => {
-    const customers = await getAllCustomers(); setCustomers(customers);
+    setIsLoading(true);
+    try {
+      const customers = await getAllCustomers();
+      setCustomers(customers);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -45,19 +56,49 @@ export default function CustomerManagement() {
   };
 
   const handleSaveCustomer = async () => {
-    if (!formData.companyName.trim() || !formData.addressLine1.trim()) {
-      alert('Please enter company name and address');
+    if (!formData.companyName.trim()) {
+      await message('Please enter company name', { 
+        title: 'Validation Error', 
+        type: 'error' 
+      });
+      return;
+    }
+    
+    if (!formData.addressLine1.trim()) {
+      await message('Please enter at least the first line of address', { 
+        title: 'Validation Error', 
+        type: 'error' 
+      });
       return;
     }
 
-    const customerToSave: Customer = editingCustomerId
-      ? { ...formData, id: editingCustomerId }
-      : { ...formData };
+    setIsSaving(true);
+    try {
+      const customerToSave: Customer = editingCustomerId
+        ? { ...formData, id: editingCustomerId }
+        : { ...formData };
 
-    await saveCustomer(customerToSave);
-    await loadCustomers();
-    resetForm();
-    alert(editingCustomerId ? 'Customer updated successfully!' : 'Customer added successfully!');
+      await saveCustomer(customerToSave);
+      await loadCustomers();
+      resetForm();
+      await message(
+        editingCustomerId 
+          ? `Customer "${formData.companyName}" has been updated successfully!` 
+          : `Customer "${formData.companyName}" has been added successfully!`,
+        { 
+          title: 'Success', 
+          type: 'info' 
+        }
+      );
+    } catch (error) {
+      console.error('Error saving customer:', error);
+      await message('Failed to save customer. Please try again.', { 
+        title: 'Error', 
+        type: 'error' 
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleEditCustomer = (customer: Customer) => {
@@ -77,10 +118,29 @@ export default function CustomerManagement() {
   };
 
   const handleDeleteCustomer = async (id: string, companyName: string) => {
-    if (confirm(`Are you sure you want to delete ${companyName}? This action cannot be undone.`)) {
-      await deleteCustomer(id);
-      await loadCustomers();
-      alert('Customer deleted successfully!');
+    const confirmed = await ask(
+      `Are you sure you want to delete customer "${companyName}"?\n\nThis action cannot be undone.`,
+      { 
+        title: 'Confirm Deletion', 
+        type: 'warning' 
+      }
+    );
+    
+    if (confirmed) {
+      try {
+        await deleteCustomer(id);
+        await loadCustomers();
+        await message(`Customer "${companyName}" has been deleted successfully.`, { 
+          title: 'Deleted', 
+          type: 'info' 
+        });
+      } catch (error) {
+        console.error('Error deleting customer:', error);
+        await message('Failed to delete customer. Please try again.', { 
+          title: 'Error', 
+          type: 'error' 
+        });
+      }
     }
   };
 
@@ -246,17 +306,32 @@ export default function CustomerManagement() {
               </button>
               <button
                 onClick={handleSaveCustomer}
-                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                disabled={isSaving}
+                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save size={20} />
-                {editingCustomerId ? 'Update' : 'Save'} Customer
+                {isSaving ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save size={20} />
+                    {editingCustomerId ? 'Update' : 'Save'} Customer
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {customers.length === 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 size={48} className="text-blue-600 animate-spin" />
+          <span className="ml-3 text-gray-600">Loading customers...</span>
+        </div>
+      ) : customers.length === 0 ? (
         <div className="text-center py-12">
           <Users size={64} className="mx-auto text-gray-300 mb-4" />
           <p className="text-gray-500 text-lg">No customers saved yet</p>

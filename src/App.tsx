@@ -4,6 +4,7 @@ import InvoiceForm from './components/InvoiceForm';
 import Settings from './components/Settings';
 import InvoiceHistory from './components/InvoiceHistory';
 import CustomerManagement from './components/CustomerManagement';
+import packageJson from '../package.json';
 
 type TabType = 'create' | 'history' | 'customers' | 'settings';
 
@@ -27,7 +28,7 @@ function App() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Apex Solar</h1>
-              <p className="text-sm text-gray-600">Invoice Generation System - Desktop</p>
+              <p className="text-sm text-gray-600">Invoice Generation System - Desktop v{packageJson.version}</p>
             </div>
           </div>
         </div>

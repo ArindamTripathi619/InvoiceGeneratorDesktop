@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FileText, Download, Trash2, Search } from 'lucide-react';
+import { FileText, Download, Trash2, Search, Loader2 } from 'lucide-react';
+import { ask, message } from '@tauri-apps/api/dialog';
 import { Invoice } from '../types/invoice';
 import { getAllInvoices, deleteInvoice, getCompanySettings, getStampSignature, getCompanyLogo } from '../utils/tauriStorage';
 import { generateInvoicePDF } from '../services/pdfGenerator';
@@ -8,6 +9,8 @@ export default function InvoiceHistory() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
 
   useEffect(() => {
     loadInvoices();
@@ -28,30 +31,66 @@ export default function InvoiceHistory() {
   }, [searchTerm, invoices]);
 
   const loadInvoices = async () => {
-    const allInvoices = await getAllInvoices();
-    setInvoices(allInvoices);
-    setFilteredInvoices(allInvoices);
+    setIsLoading(true);
+    try {
+      const allInvoices = await getAllInvoices();
+      setInvoices(allInvoices);
+      setFilteredInvoices(allInvoices);
+    } catch (error) {
+      console.error('Error loading invoices:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRegeneratePDF = async (invoice: Invoice) => {
+    if (!invoice.id) return;
+    setGeneratingPdfId(invoice.id);
     try {
       const companySettings = await getCompanySettings();
       const stampSignature = await getStampSignature();
       const companyLogo = await getCompanyLogo();
       await generateInvoicePDF(invoice, companySettings, stampSignature || undefined, companyLogo || undefined);
-      alert('PDF regenerated successfully!');
+      await message('PDF has been generated and saved successfully!', { 
+        title: 'Success', 
+        type: 'info' 
+      });
     } catch (error) {
       console.error('Error regenerating PDF:', error);
-      alert('Error regenerating PDF. Please try again.');
+      await message('Failed to generate PDF. Please check your settings and try again.', { 
+        title: 'Error', 
+        type: 'error' 
+      });
+    } finally {
+      setGeneratingPdfId(null);
     }
   };
 
   const handleDeleteInvoice = async (id: string, invoiceNumber: string, financialYear: string) => {
     const formattedInvoiceNumber = `AS/${financialYear}/${invoiceNumber}`;
-    if (confirm(`Are you sure you want to delete invoice ${formattedInvoiceNumber}? This action cannot be undone.`)) {
-      await deleteInvoice(id);
-      await loadInvoices();
-      alert('Invoice deleted successfully!');
+    const confirmed = await ask(
+      `Are you sure you want to delete invoice ${formattedInvoiceNumber}?\n\nThis action cannot be undone.`,
+      { 
+        title: 'Confirm Deletion', 
+        type: 'warning' 
+      }
+    );
+    
+    if (confirmed) {
+      try {
+        await deleteInvoice(id);
+        await loadInvoices();
+        await message(`Invoice ${formattedInvoiceNumber} has been deleted successfully.`, { 
+          title: 'Deleted', 
+          type: 'info' 
+        });
+      } catch (error) {
+        console.error('Error deleting invoice:', error);
+        await message('Failed to delete invoice. Please try again.', { 
+          title: 'Error', 
+          type: 'error' 
+        });
+      }
     }
   };
 
@@ -75,7 +114,12 @@ export default function InvoiceHistory() {
         </div>
       </div>
 
-      {filteredInvoices.length === 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 size={48} className="text-blue-600 animate-spin" />
+          <span className="ml-3 text-gray-600">Loading invoices...</span>
+        </div>
+      ) : filteredInvoices.length === 0 ? (
         <div className="text-center py-12">
           <FileText size={64} className="mx-auto text-gray-300 mb-4" />
           <p className="text-gray-500 text-lg">
@@ -140,11 +184,21 @@ export default function InvoiceHistory() {
                 <div className="flex gap-2 ml-4">
                   <button
                     onClick={() => handleRegeneratePDF(invoice)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    disabled={generatingPdfId === invoice.id}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Download PDF"
                   >
-                    <Download size={18} />
-                    PDF
+                    {generatingPdfId === invoice.id ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download size={18} />
+                        PDF
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={() => invoice.id && handleDeleteInvoice(invoice.id, invoice.invoiceNumber, invoice.financialYear)}

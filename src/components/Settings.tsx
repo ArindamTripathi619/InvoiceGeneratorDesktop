@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Upload, Save, Image as ImageIcon } from 'lucide-react';
+import { Upload, Save, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { message } from '@tauri-apps/api/dialog';
 import { CompanySettings } from '../types/invoice';
 import { saveCompanySettings, getCompanySettings, saveStampSignature, getStampSignature, saveCompanyLogo, getCompanyLogo } from '../utils/tauriStorage';
 
@@ -12,32 +13,53 @@ export default function Settings() {
     gstNumber: '19AFZPT2526E1ZV',
   });
 
-  const [_stampSignature, setStampSignature] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [_companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isUploadingStamp, setIsUploadingStamp] = useState<boolean>(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const loadData = async () => {
-      const loadedSettings = await getCompanySettings();
-      setSettings(loadedSettings);
-      const loadedStamp = await getStampSignature();
-      if (loadedStamp) {
-        setStampSignature(loadedStamp);
-        setPreviewUrl(loadedStamp);
-      }
-      const loadedLogo = await getCompanyLogo();
-      if (loadedLogo) {
-        setCompanyLogo(loadedLogo);
-        setLogoPreviewUrl(loadedLogo);
+      setIsLoading(true);
+      try {
+        const loadedSettings = await getCompanySettings();
+        setSettings(loadedSettings);
+        const loadedStamp = await getStampSignature();
+        if (loadedStamp) {
+          setPreviewUrl(loadedStamp);
+        }
+        const loadedLogo = await getCompanyLogo();
+        if (loadedLogo) {
+          setLogoPreviewUrl(loadedLogo);
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadData();
   }, []);
 
   const handleSaveSettings = async () => {
-    await saveCompanySettings(settings);
-    alert('Company settings saved successfully!');
+    setIsSaving(true);
+    try {
+      await saveCompanySettings(settings);
+      await message('Company settings have been saved successfully!', { 
+        title: 'Success', 
+        type: 'info' 
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      await message('Failed to save settings. Please try again.', { 
+        title: 'Error', 
+        type: 'error' 
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,22 +67,41 @@ export default function Settings() {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please upload a valid image file (PNG recommended)');
+      await message('Please upload a valid image file (PNG, JPEG, or JPG)', { 
+        title: 'Invalid File', 
+        type: 'error' 
+      });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('File size should be less than 5MB');
+      await message('File size should be less than 5MB. Please choose a smaller file.', { 
+        title: 'File Too Large', 
+        type: 'error' 
+      });
       return;
     }
 
+    setIsUploadingStamp(true);
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const dataUrl = event.target?.result as string;
-      setStampSignature(dataUrl);
-      setPreviewUrl(dataUrl);
-      await saveStampSignature(dataUrl);
-      alert('Stamp and signature uploaded successfully!');
+      try {
+        const dataUrl = event.target?.result as string;
+        setPreviewUrl(dataUrl);
+        await saveStampSignature(dataUrl);
+        await message('Stamp and signature have been uploaded successfully!', { 
+          title: 'Success', 
+          type: 'info' 
+        });
+      } catch (error) {
+        console.error('Error uploading stamp:', error);
+        await message('Failed to upload stamp and signature. Please try again.', { 
+          title: 'Error', 
+          type: 'error' 
+        });
+      } finally {
+        setIsUploadingStamp(false);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -70,22 +111,41 @@ export default function Settings() {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please upload a valid image file (PNG recommended)');
+      await message('Please upload a valid image file (PNG, JPEG, or JPG)', { 
+        title: 'Invalid File', 
+        type: 'error' 
+      });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('File size should be less than 5MB');
+      await message('File size should be less than 5MB. Please choose a smaller file.', { 
+        title: 'File Too Large', 
+        type: 'error' 
+      });
       return;
     }
 
+    setIsUploadingLogo(true);
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const dataUrl = event.target?.result as string;
-      setCompanyLogo(dataUrl);
-      setLogoPreviewUrl(dataUrl);
-      await saveCompanyLogo(dataUrl);
-      alert('Company logo uploaded successfully!');
+      try {
+        const dataUrl = event.target?.result as string;
+        setLogoPreviewUrl(dataUrl);
+        await saveCompanyLogo(dataUrl);
+        await message('Company logo has been uploaded successfully!', { 
+          title: 'Success', 
+          type: 'info' 
+        });
+      } catch (error) {
+        console.error('Error uploading logo:', error);
+        await message('Failed to upload company logo. Please try again.', { 
+          title: 'Error', 
+          type: 'error' 
+        });
+      } finally {
+        setIsUploadingLogo(false);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -97,7 +157,13 @@ export default function Settings() {
         <p className="text-gray-600">Manage bank details and upload stamp & signature</p>
       </div>
 
-      <div className="space-y-8">
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 size={48} className="text-blue-600 animate-spin" />
+          <span className="ml-3 text-gray-600">Loading settings...</span>
+        </div>
+      ) : (
+        <div className="space-y-8">
         <div className="bg-gray-50 p-6 rounded-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Bank Account Details</h2>
           <div className="space-y-4">
@@ -165,10 +231,20 @@ export default function Settings() {
 
             <button
               onClick={handleSaveSettings}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={isSaving}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save size={20} />
-              Save Settings
+              {isSaving ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save size={20} />
+                  Save Settings
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -181,13 +257,23 @@ export default function Settings() {
 
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
-                <Upload size={20} />
-                Upload Logo
+              <label className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                {isUploadingLogo ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={20} />
+                    Upload Logo
+                  </>
+                )}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/jpg"
                   onChange={handleLogoUpload}
+                  disabled={isUploadingLogo}
                   className="hidden"
                 />
               </label>
@@ -225,13 +311,23 @@ export default function Settings() {
 
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
-                <Upload size={20} />
-                Upload Image
+              <label className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                {isUploadingStamp ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={20} />
+                    Upload Image
+                  </>
+                )}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/jpg"
                   onChange={handleFileUpload}
+                  disabled={isUploadingStamp}
                   className="hidden"
                 />
               </label>
@@ -260,7 +356,8 @@ export default function Settings() {
             )}
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
