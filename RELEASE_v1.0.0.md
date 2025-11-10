@@ -125,16 +125,35 @@ Built with Tauri and Rust for lightning-fast startup and operation. Small footpr
 
 ## 📦 Installation
 
-### Option 1: MSI Installer (Recommended)
-1. Download `Invoice-Generator-Desktop_1.0.0_x64_en-US.msi`
-2. Double-click to install
-3. Follow the installation wizard
-4. Launch from Start Menu or Desktop
+### ⚠️ Windows SmartScreen Warning (Expected Behavior)
 
-### Option 2: Portable Executable
-1. Download `Invoice-Generator-Desktop_1.0.0_x64.exe`
-2. Run directly (no installation needed)
-3. Data stored in AppData automatically
+**First-time users will see a Windows security warning** because this application is not yet code-signed with a commercial certificate.
+
+**This is normal for new applications.** Here's how to proceed:
+
+1. When you see "Windows protected your PC":
+   - Click **"More info"**
+   - Click **"Run anyway"**
+2. This is a one-time warning
+3. Your data and system are safe - this is open-source software
+
+**Why this happens**: We're a new publisher, and obtaining a code signing certificate costs $400-600/year. We're working on getting one for v1.1.0 to remove these warnings.
+
+**Your security**: All code is open-source on GitHub. The application runs entirely offline with no data collection or internet requirements.
+
+### Option 1: MSI Installer (Recommended)
+1. Download `Apex Solar Invoice Generator_1.0.0_x64_en-US.msi`
+2. If SmartScreen warns: Click "More info" → "Run anyway"
+3. Double-click to install
+4. Follow the installation wizard
+5. Launch from Start Menu or Desktop
+
+### Option 2: NSIS Setup Executable
+1. Download `Apex Solar Invoice Generator_1.0.0_x64-setup.exe`
+2. If SmartScreen warns: Click "More info" → "Run anyway"
+3. Run the installer
+4. Follow setup wizard
+5. Launch from Start Menu or Desktop
 
 ### First Launch
 - WebView2 will be installed automatically if not present
