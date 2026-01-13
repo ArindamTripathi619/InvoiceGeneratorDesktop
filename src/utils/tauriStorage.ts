@@ -1,5 +1,6 @@
 import { BaseDirectory, createDir, exists, readTextFile, writeTextFile } from '@tauri-apps/api/fs';
 import { Invoice, Customer, CompanySettings } from '../types/invoice';
+import { BANK_DETAILS } from './constants';
 
 const STORAGE_FILES = {
   DRAFT_INVOICE: 'draft_invoice.json',
@@ -124,11 +125,11 @@ export const saveCompanySettings = async (settings: CompanySettings): Promise<vo
 
 export const getCompanySettings = async (): Promise<CompanySettings> => {
   return await readJsonFile<CompanySettings>(STORAGE_FILES.COMPANY_SETTINGS, {
-    accountName: 'APEX SOLAR',
-    bankName: 'STATE BANK OF INDIA',
-    ifscCode: 'SBIN0007679',
-    accountNumber: '40423372674',
-    gstNumber: '19AFZPT2526E1ZV',
+    accountName: BANK_DETAILS.name,
+    bankName: BANK_DETAILS.bankName,
+    ifscCode: BANK_DETAILS.ifscCode,
+    accountNumber: BANK_DETAILS.accountNumber,
+    gstNumber: BANK_DETAILS.gstNumber,
   });
 };
 

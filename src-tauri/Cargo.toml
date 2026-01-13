@@ -16,6 +16,7 @@ tauri-build = { version = "1.5", features = [] }
 tauri = { version = "1.5", features = [ "dialog-message", "dialog-open", "dialog-save", "fs-all", "path-all", "shell-open"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tauri-plugin-sql = { path = "./plugins-workspace/plugins/sql", features = ["sqlite"] }
 
 [features]
 # This feature is used for production builds or when `devPath` points to the filesystem

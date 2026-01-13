@@ -21,7 +21,8 @@
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "tauri-plugin-sql-api": "file:src-tauri/plugins-workspace/plugins/sql"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

@@ -4,6 +4,7 @@ import { save } from '@tauri-apps/api/dialog';
 import { writeBinaryFile, BaseDirectory } from '@tauri-apps/api/fs';
 import { Invoice, CompanySettings } from '../types/invoice';
 import { numberToWordsIndian } from '../utils/numberToWords';
+import { COMPANY_DETAILS } from '../utils/constants';
 
 export async function generateInvoicePDF(
   invoice: Invoice,
@@ -31,27 +32,27 @@ export async function generateInvoicePDF(
   // Company name with special styling - matching original letterhead
   doc.setFont('times', 'bold'); // Use Times font to match original
   doc.setTextColor(41, 98, 184); // Blue color for APEX SOLAR
-  
+
   // Draw "A" in APEX - larger size
   doc.setFontSize(36); // Larger for the "A"
   doc.text('A', 55, currentY + 12);
-  
+
   // Draw "PEX" - normal size, closer to A
   doc.setFontSize(30);
   doc.text('PEX', 64, currentY + 12); // Brought closer to A
-  
+
   // Add minimal space and draw "S" in SOLAR - larger size, with proper spacing
   doc.setFontSize(36); // Larger for the "S"
   doc.text('S', 92, currentY + 12); // Slightly more space from APEX
-  
+
   // Draw "OLAR" - normal size, closer to S
   doc.setFontSize(30);
   doc.text('OLAR', 99, currentY + 12); // Brought even closer to S
-  
+
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(12);
   doc.setTextColor(0, 128, 0); // Green color for "for green energy"
-  doc.text('for green energy', 55, currentY + 21); // Adjusted for taller logo
+  doc.text(COMPANY_DETAILS.tagline, 55, currentY + 21); // Adjusted for taller logo
 
   // Service description on right - enhanced styling
   doc.setFont('helvetica', 'bold');
@@ -64,28 +65,28 @@ export async function generateInvoicePDF(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9); // Slightly larger for better readability
   doc.setTextColor(51, 51, 51); // Dark gray
-  doc.text('Ramkrishna Nagar, Paschimpara, P.O.- Panchpota, P.S.- Narendrapur, Kolkata - 700 152', margin, currentY + 40); // Changed P.S. to Narendrapur
-  
+  doc.text(COMPANY_DETAILS.address.fullAddress, margin, currentY + 40);
+
   // Contact info with enhanced formatting
   doc.setFont('helvetica', 'bold'); // Make Ph: bold and black
   doc.setTextColor(0, 0, 0); // Black color for labels
   doc.text('Ph : ', margin, currentY + 44);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(51, 51, 51);
-  doc.text('+91-97327 33031', margin + 12, currentY + 44);
-  
+  doc.text(COMPANY_DETAILS.contact.phone, margin + 12, currentY + 44);
+
   doc.setFont('helvetica', 'bold'); // Make E-mail: bold and black
   doc.setTextColor(0, 0, 0); // Black color for email label
   doc.text('E-mail : ', margin + 50, currentY + 44);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(51, 51, 51);
-  doc.text('partha.apexsolar@gmail.com', margin + 66, currentY + 44);
+  doc.text(COMPANY_DETAILS.contact.email, margin + 66, currentY + 44);
 
   // Enhanced brown/red line separator with gradient effect
   doc.setDrawColor(139, 69, 19); // Brown color
   doc.setLineWidth(2); // Thicker line
   doc.line(margin, currentY + 49, pageWidth - margin, currentY + 49); // Moved down
-  
+
   // Add a subtle second line for depth
   doc.setDrawColor(41, 98, 184); // Blue accent line
   doc.setLineWidth(0.5);
@@ -98,7 +99,7 @@ export async function generateInvoicePDF(
   doc.setFontSize(22); // Larger and more prominent
   doc.setTextColor(0, 0, 0); // Black color instead of blue
   doc.text('Tax Invoice', pageWidth / 2, currentY, { align: 'center' });
-  
+
   // Add underline for Tax Invoice
   doc.setDrawColor(0, 0, 0); // Black underline
   doc.setLineWidth(0.8);
@@ -118,7 +119,7 @@ export async function generateInvoicePDF(
   doc.setFontSize(11); // Slightly larger
   doc.setTextColor(51, 51, 51); // Dark gray
   doc.text(invoice.customer.companyName.toUpperCase(), leftColumnX, currentY);
-  
+
   // Position date aligned with customer name
   const customerNameY = currentY;
   doc.setFont('helvetica', 'bold');
@@ -192,7 +193,7 @@ export async function generateInvoicePDF(
   const workOrderValue = invoice.workOrderDate
     ? `${invoice.workOrderReference} Dated- ${new Date(invoice.workOrderDate).toLocaleDateString('en-GB').replace(/\//g, '.')}`
     : invoice.workOrderReference;
-  
+
   // Combine label and value for centering
   const fullWorkOrderText = `${workOrderLabel}${workOrderValue}`;
   doc.text(fullWorkOrderText, pageWidth / 2, currentY, { align: 'center' });
@@ -338,7 +339,7 @@ export async function generateInvoicePDF(
   ];
 
   const accountTableY = currentY;
-  
+
   autoTable(doc, {
     startY: accountTableY,
     head: [['Account Details']],
@@ -366,17 +367,17 @@ export async function generateInvoicePDF(
   const signatureY = accountTableY;
   // const signatureX = rightColumnX + 10;
   const signatureCenterX = rightColumnX + 22.5; // Center point for text elements (keep original)
-  
+
   // PROPRIETOR - center aligned
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.text('PROPRIETOR', signatureCenterX, signatureY, { align: 'center' });
-  
+
   // (PARTHA TRIPATHI) - center aligned below PROPRIETOR
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.text('(PARTHA TRIPATHI)', signatureCenterX, signatureY + 4, { align: 'center' });
-  
+
   doc.setFontSize(8.5);
 
   if (stampSignatureDataUrl) {
@@ -407,8 +408,8 @@ export async function generateInvoicePDF(
   try {
     // First, save to generated folder in app data
     const generatedPath = `generated/${fileName}`;
-    await writeBinaryFile(generatedPath, new Uint8Array(pdfBlob), { 
-      dir: BaseDirectory.AppData 
+    await writeBinaryFile(generatedPath, new Uint8Array(pdfBlob), {
+      dir: BaseDirectory.AppData
     });
 
     // Then, ask user where they want to save a copy

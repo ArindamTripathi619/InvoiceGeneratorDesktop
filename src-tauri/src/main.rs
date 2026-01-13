@@ -8,19 +8,16 @@ use tauri::Manager;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_sql::Builder::default().build())
+        .invoke_handler(tauri::generate_handler![greet])
         .setup(|app| {
-            // Create app data directory if it doesn't exist
-            let app_dir = app.path_resolver().app_data_dir().unwrap();
-            if !app_dir.exists() {
-                std::fs::create_dir_all(&app_dir)?;
-            }
-            
+            let app_handle = app.handle();
             // Create generated invoices directory
-            let invoices_dir = app_dir.join("generated");
-            if !invoices_dir.exists() {
-                std::fs::create_dir_all(&invoices_dir)?;
+            let app_data_dir = app_handle.path_resolver().app_data_dir().unwrap();
+            let generated_dir = app_data_dir.join("generated");
+            if !generated_dir.exists() {
+                std::fs::create_dir_all(generated_dir).unwrap();
             }
-
             Ok(())
         })
         .run(tauri::generate_context!())

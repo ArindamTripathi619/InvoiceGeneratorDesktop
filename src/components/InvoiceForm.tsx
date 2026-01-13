@@ -1,19 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Download, Save } from 'lucide-react';
+import { Download, Save } from 'lucide-react';
 import { message } from '@tauri-apps/api/dialog';
 import { Invoice, LineItem, Customer } from '../types/invoice';
 import { numberToWordsIndian, getCurrentFinancialYear } from '../utils/numberToWords';
-import { 
-  saveDraftInvoice, 
-  getDraftInvoice, 
-  clearDraftInvoice, 
-  saveInvoice, 
-  getAllCustomers, 
-  getCompanySettings, 
-  getStampSignature, 
-  getCompanyLogo 
-} from '../utils/tauriStorage';
 import { generateInvoicePDF } from '../services/pdfGenerator';
+import { InvoiceHeader } from './invoice/InvoiceHeader';
+import { LineItemsTable } from './invoice/LineItemsTable';
+import { TaxSummary } from './invoice/TaxSummary';
+import { dbService } from '../services/db';
 
 export default function InvoiceForm() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -59,10 +53,10 @@ export default function InvoiceForm() {
 
   const loadData = async () => {
     try {
-      const customerList = await getAllCustomers();
+      const customerList = await dbService.getAllCustomers();
       setCustomers(customerList);
-      
-      const draft = await getDraftInvoice();
+
+      const draft = await dbService.getDraftInvoice();
       if (draft) {
         if (draft.invoiceNumber) setInvoiceNumber(draft.invoiceNumber);
         if (draft.invoiceDate) setInvoiceDate(draft.invoiceDate);
@@ -120,7 +114,7 @@ export default function InvoiceForm() {
       cgstPercentage,
       sgstPercentage,
     };
-    await saveDraftInvoice(draft);
+    await dbService.saveDraftInvoice(draft);
   };
 
   const handleCustomerSelect = (customerId: string) => {
@@ -249,14 +243,14 @@ export default function InvoiceForm() {
         amountInWords: numberToWordsIndian(totals.grandTotal),
       };
 
-      const companySettings = await getCompanySettings();
-      const stampSignature = await getStampSignature();
-      const companyLogo = await getCompanyLogo();
+      const companySettings = await dbService.getCompanySettings();
+      const stampSignature = await dbService.getStampSignature();
+      const companyLogo = await dbService.getCompanyLogo();
 
       await generateInvoicePDF(invoice, companySettings, stampSignature || undefined, companyLogo || undefined);
 
-      await saveInvoice(invoice);
-      await clearDraftInvoice();
+      await dbService.saveInvoice(invoice);
+      await dbService.clearDraftInvoice();
 
       await message('Invoice generated successfully!', { title: 'Success', type: 'info' });
 
@@ -298,7 +292,7 @@ export default function InvoiceForm() {
     ]);
     setCgstPercentage(9);
     setSgstPercentage(9);
-    clearDraftInvoice();
+    dbService.clearDraftInvoice();
   };
 
   return (
@@ -308,413 +302,77 @@ export default function InvoiceForm() {
         <p className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Generate professional invoices for Apex Solar</p>
       </div>
 
-      <div className="space-y-8">
-        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg transition-colors duration-200">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Invoice Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                Invoice Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-                placeholder="022"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-500 transition-colors duration-200 mt-1">
-                Will be formatted as: AS/{financialYear}/{invoiceNumber || 'XXX'}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                Financial Year
-              </label>
-              <input
-                type="text"
-                value={financialYear}
-                disabled
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400 transition-colors duration-200"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                Invoice Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                value={invoiceDate}
-                onChange={(e) => setInvoiceDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-              />
-            </div>
-          </div>
+      <InvoiceHeader
+        invoiceNumber={invoiceNumber}
+        setInvoiceNumber={setInvoiceNumber}
+        financialYear={financialYear}
+        invoiceDate={invoiceDate}
+        setInvoiceDate={setInvoiceDate}
+        workOrderReference={workOrderReference}
+        setWorkOrderReference={setWorkOrderReference}
+        workOrderDate={workOrderDate}
+        setWorkOrderDate={setWorkOrderDate}
+        customers={customers}
+        selectedCustomerId={selectedCustomerId}
+        onCustomerSelect={handleCustomerSelect}
+        companyName={companyName}
+        setCompanyName={setCompanyName}
+        addressLine1={addressLine1}
+        setAddressLine1={setAddressLine1}
+        addressLine2={addressLine2}
+        setAddressLine2={setAddressLine2}
+        addressLine3={addressLine3}
+        setAddressLine3={setAddressLine3}
+        city={city}
+        setCity={setCity}
+        state={state}
+        setState={setState}
+        pincode={pincode}
+        setPincode={setPincode}
+        gstNumber={gstNumber}
+        setGstNumber={setGstNumber}
+        panNumber={panNumber}
+        setPanNumber={setPanNumber}
+      />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                Work Order Reference
-              </label>
-              <input
-                type="text"
-                value={workOrderReference}
-                onChange={(e) => setWorkOrderReference(e.target.value)}
-                placeholder="NIPL/RTS/002/35 Kwp/I & C/24-25/"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                Work Order Date
-              </label>
-              <input
-                type="date"
-                value={workOrderDate}
-                onChange={(e) => setWorkOrderDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-              />
-            </div>
-          </div>
-        </div>
+      <div className="mt-8">
+        <LineItemsTable
+          lineItems={lineItems}
+          onAdd={addLineItem}
+          onRemove={removeLineItem}
+          onUpdate={updateLineItem}
+        />
+      </div>
 
-        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg transition-colors duration-200">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Customer Details</h2>
+      <div className="mt-8">
+        <TaxSummary
+          cgstPercentage={cgstPercentage}
+          sgstPercentage={sgstPercentage}
+          onCgstChange={setCgstPercentage}
+          onSgstChange={setSgstPercentage}
+          totals={totals}
+        />
+      </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-              Select Existing Customer (Optional)
-            </label>
-            <select
-              value={selectedCustomerId}
-              onChange={(e) => handleCustomerSelect(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-            >
-              <option value="">-- New Customer --</option>
-              {customers.map(customer => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.companyName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                Company Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="NIMBUS IRRIGATION PVT.LTD."
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  Address Line 1 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={addressLine1}
-                  onChange={(e) => setAddressLine1(e.target.value)}
-                  placeholder="Suit No. #705, South City Business Park"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  Address Line 2
-                </label>
-                <input
-                  type="text"
-                  value={addressLine2}
-                  onChange={(e) => setAddressLine2(e.target.value)}
-                  placeholder="7th Floor 770, Eastern Metropolitan Bypass"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  Address Line 3
-                </label>
-                <input
-                  type="text"
-                  value={addressLine3}
-                  onChange={(e) => setAddressLine3(e.target.value)}
-                  placeholder="Additional address info"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  City
-                </label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Kolkata"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  State
-                </label>
-                <input
-                  type="text"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  placeholder="West Bengal"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  Pincode
-                </label>
-                <input
-                  type="text"
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value)}
-                  placeholder="700107"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  GST Number
-                </label>
-                <input
-                  type="text"
-                  value={gstNumber}
-                  onChange={(e) => setGstNumber(e.target.value)}
-                  placeholder="19AACN8612L1Z5"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  PAN Number
-                </label>
-                <input
-                  type="text"
-                  value={panNumber}
-                  onChange={(e) => setPanNumber(e.target.value)}
-                  placeholder="AAACN8612L"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg transition-colors duration-200">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 transition-colors duration-200">Service Line Items</h2>
-            <button
-              onClick={addLineItem}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-200 transition-colors"
-            >
-              <Plus size={20} />
-              Add Item
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {lineItems.map((item) => (
-              <div key={item.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-200">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">Item {item.serialNumber}</h3>
-                  {lineItems.length > 1 && (
-                    <button
-                      onClick={() => removeLineItem(item.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                      Description <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      value={item.description}
-                      onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
-                      rows={3}
-                      placeholder="Installation, testing & commissioning include lifting of all materials from site store to actual installation site for 35 kwp Rooftop Solar Power plant..."
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                      HSN/SAC Code
-                    </label>
-                    <input
-                      type="text"
-                      value={item.hsnSacCode}
-                      onChange={(e) => updateLineItem(item.id, 'hsnSacCode', e.target.value)}
-                      placeholder="995444"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                      Unit
-                    </label>
-                    <input
-                      type="text"
-                      value={item.unit}
-                      onChange={(e) => updateLineItem(item.id, 'unit', e.target.value)}
-                      placeholder="kWp"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                      Rate (Rs.) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={item.rate}
-                      onChange={(e) => updateLineItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
-                      placeholder="1.50"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                      Quantity <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.001"
-                      value={item.quantity}
-                      onChange={(e) => updateLineItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                      placeholder="35"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                      Amount (Rs.)
-                    </label>
-                    <input
-                      type="text"
-                      value={item.amount.toFixed(2)}
-                      disabled
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400 transition-colors duration-200 font-semibold"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg transition-colors duration-200">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 transition-colors duration-200">Financial Summary</h2>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  CGST Percentage
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={cgstPercentage}
-                  onChange={(e) => setCgstPercentage(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  SGST Percentage
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={sgstPercentage}
-                  onChange={(e) => setSgstPercentage(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                />
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-400 transition-colors duration-200">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">Total Basic Amount:</span>
-                  <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Rs. {totals.totalBasicAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">CGST ({cgstPercentage}%):</span>
-                  <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Rs. {totals.cgstAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">SGST ({sgstPercentage}%):</span>
-                  <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">Rs. {totals.sgstAmount.toFixed(2)}</span>
-                </div>
-                <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                  <div className="flex justify-between text-lg">
-                    <span className="font-bold text-gray-800 dark:text-gray-200 transition-colors duration-200">Grand Total:</span>
-                    <span className="font-bold text-blue-600 dark:text-blue-400 transition-colors duration-200">Rs. {totals.grandTotal.toFixed(2)}</span>
-                  </div>
-                </div>
-                <div className="mt-3 p-3 bg-blue-50 dark:bg-gray-700 rounded transition-colors duration-200">
-                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">Amount in Words:</p>
-                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-300 mt-1 transition-colors duration-200">
-                    {numberToWordsIndian(totals.grandTotal)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-4 justify-end">
-          <button
-            onClick={handleAutoSave}
-            className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <Save size={20} />
-            Save Draft
-          </button>
-          <button
-            onClick={handleGeneratePDF}
-            disabled={isGenerating}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors ${
-              isGenerating
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
-          >
-            <Download size={20} />
-            {isGenerating ? 'Generating...' : 'Generate PDF'}
-          </button>
-        </div>
+      <div className="flex gap-4 justify-end mt-8">
+        <button
+          onClick={handleAutoSave}
+          className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+        >
+          <Save size={20} />
+          Save Draft
+        </button>
+        <button
+          onClick={handleGeneratePDF}
+          disabled={isGenerating}
+          className={`flex items - center gap - 2 px - 6 py - 3 rounded - lg transition - colors ${isGenerating
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-700 text-white'
+            } `}
+        >
+          <Download size={20} />
+          {isGenerating ? 'Generating...' : 'Generate PDF'}
+        </button>
       </div>
     </div>
   );

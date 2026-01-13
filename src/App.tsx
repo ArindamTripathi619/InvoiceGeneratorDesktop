@@ -7,6 +7,8 @@ import CustomerManagement from './components/CustomerManagement';
 import SplashScreen from './components/SplashScreen';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import packageJson from '../package.json';
+import { COMPANY_DETAILS, FOOTER_DETAILS } from './utils/constants';
+import { dbService } from './services/db';
 
 type TabType = 'create' | 'history' | 'customers' | 'settings';
 
@@ -14,6 +16,17 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<TabType>('create');
   const [showSplash, setShowSplash] = useState(true);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    const initDb = async () => {
+      try {
+        await dbService.init();
+      } catch (error) {
+        console.error('Failed to initialize database:', error);
+      }
+    };
+    initDb();
+  }, []);
 
   // Check if splash has been shown in this session
   useEffect(() => {
@@ -95,11 +108,10 @@ function AppContent() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center gap-1.5 px-1.5 sm:px-2 md:px-3 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-4 font-medium transition-all whitespace-nowrap ${
-                    isActive
-                      ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-gray-700'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 px-1.5 sm:px-2 md:px-3 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-4 font-medium transition-all whitespace-nowrap ${isActive
+                    ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-gray-700'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
                   title={tab.label}
                 >
                   <Icon size={16} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5" />
@@ -121,11 +133,11 @@ function AppContent() {
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-4 sm:mt-8 md:mt-12 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-3 sm:py-4 md:py-6">
           <div className="text-center text-[10px] sm:text-xs md:text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-            <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">APEX SOLAR</p>
-            <p className="hidden md:block">Ramkrishna Nagar, Paschimpara, P.O.- Panchpota, P.S.- Sonarpur, Kolkata - 700 152</p>
-            <p className="md:hidden text-[10px]">Kolkata - 700 152</p>
-            <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs">Ph: +91-97327 33031</p>
-            <p className="hidden sm:block text-[10px]">Solar Power Plant Installation</p>
+            <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">{COMPANY_DETAILS.name}</p>
+            <p className="hidden md:block">{FOOTER_DETAILS.addressLine}</p>
+            <p className="md:hidden text-[10px]">{FOOTER_DETAILS.cityPincode}</p>
+            <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs">Ph: {FOOTER_DETAILS.phone}</p>
+            <p className="hidden sm:block text-[10px]">{FOOTER_DETAILS.service}</p>
           </div>
         </div>
       </footer>

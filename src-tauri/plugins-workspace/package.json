@@ -1,0 +1,38 @@
+{
+  "name": "plugins-workspace",
+  "private": true,
+  "license": "MIT or APACHE-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm run -r --parallel --filter !plugins-workspace --filter !\"./plugins/*/examples/**\" build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format-check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.2",
+    "@rollup/plugin-node-resolve": "16.0.3",
+    "@rollup/plugin-terser": "0.4.4",
+    "@rollup/plugin-typescript": "11.1.6",
+    "eslint": "9.39.2",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.7.4",
+    "rollup": "4.54.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.50.1"
+  },
+  "resolutions": {
+    "semver": ">=7.5.2",
+    "optionator": ">=0.9.3"
+  },
+  "engines": {
+    "pnpm": "^10.0.0"
+  },
+  "pnpm": {
+    "auditConfig": {
+      "ignoreCves": [
+        "CVE-2023-46115"
+      ]
+    }
+  }
+}

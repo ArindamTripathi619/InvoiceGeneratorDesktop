@@ -1,0 +1,72 @@
+name: Lint Rust
+
+on:
+  push:
+    branches:
+      - v1
+      - v2
+    paths:
+      - ".github/workflows/lint-rust.yml"
+      - "plugins/*/src/**"
+      - "**/Cargo.toml"
+  pull_request:
+    branches:
+      - v1
+      - v2
+    paths:
+      - ".github/workflows/lint-rust.yml"
+      - "plugins/*/src/**"
+      - "**/Cargo.toml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  clippy:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install webkit2gtk
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev
+
+      - name: Install clippy with stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: clippy
+        run: cargo clippy --workspace --exclude 'tauri-plugin-sql' --all-targets --all-features -- -D warnings
+
+      - name: clippy sql:sqlite
+        run: cargo clippy --package 'tauri-plugin-sql' --all-targets --features sqlite -- -D warnings
+
+      - name: clippy sql:mysql
+        run: cargo clippy --package 'tauri-plugin-sql' --all-targets --features mysql -- -D warnings
+
+      - name: clippy sql:postgres
+        run: cargo clippy --package 'tauri-plugin-sql' --all-targets --features postgres -- -D warnings
+
+  fmt:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install rustfmt with nightly toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check

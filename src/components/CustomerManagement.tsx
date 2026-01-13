@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Users, Plus, Trash2, CreditCard as Edit2, X, Save, Loader2 } from 'lucide-react';
 import { ask, message } from '@tauri-apps/api/dialog';
 import { Customer } from '../types/invoice';
-import { getAllCustomers, saveCustomer, deleteCustomer } from '../utils/tauriStorage';
+import { dbService } from '../services/db';
 
 export default function CustomerManagement() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -30,7 +30,7 @@ export default function CustomerManagement() {
   const loadCustomers = async () => {
     setIsLoading(true);
     try {
-      const customers = await getAllCustomers();
+      const customers = await dbService.getAllCustomers();
       setCustomers(customers);
     } catch (error) {
       console.error('Error loading customers:', error);
@@ -57,17 +57,17 @@ export default function CustomerManagement() {
 
   const handleSaveCustomer = async () => {
     if (!formData.companyName.trim()) {
-      await message('Please enter company name', { 
-        title: 'Validation Error', 
-        type: 'error' 
+      await message('Please enter company name', {
+        title: 'Validation Error',
+        type: 'error'
       });
       return;
     }
-    
+
     if (!formData.addressLine1.trim()) {
-      await message('Please enter at least the first line of address', { 
-        title: 'Validation Error', 
-        type: 'error' 
+      await message('Please enter at least the first line of address', {
+        title: 'Validation Error',
+        type: 'error'
       });
       return;
     }
@@ -76,25 +76,25 @@ export default function CustomerManagement() {
     try {
       const customerToSave: Customer = editingCustomerId
         ? { ...formData, id: editingCustomerId }
-        : { ...formData };
+        : { ...formData, id: Date.now().toString() }; // Generate ID if new
 
-      await saveCustomer(customerToSave);
+      await dbService.upsertCustomer(customerToSave);
       await loadCustomers();
       resetForm();
       await message(
-        editingCustomerId 
-          ? `Customer "${formData.companyName}" has been updated successfully!` 
+        editingCustomerId
+          ? `Customer "${formData.companyName}" has been updated successfully!`
           : `Customer "${formData.companyName}" has been added successfully!`,
-        { 
-          title: 'Success', 
-          type: 'info' 
+        {
+          title: 'Success',
+          type: 'info'
         }
       );
     } catch (error) {
       console.error('Error saving customer:', error);
-      await message('Failed to save customer. Please try again.', { 
-        title: 'Error', 
-        type: 'error' 
+      await message('Failed to save customer. Please try again.', {
+        title: 'Error',
+        type: 'error'
       });
     } finally {
       setIsSaving(false);
@@ -105,13 +105,13 @@ export default function CustomerManagement() {
     setFormData({
       companyName: customer.companyName,
       addressLine1: customer.addressLine1,
-      addressLine2: customer.addressLine2,
-      addressLine3: customer.addressLine3,
-      city: customer.city,
-      state: customer.state,
-      pincode: customer.pincode,
-      gstNumber: customer.gstNumber,
-      panNumber: customer.panNumber,
+      addressLine2: customer.addressLine2 || '',
+      addressLine3: customer.addressLine3 || '',
+      city: customer.city || '',
+      state: customer.state || '',
+      pincode: customer.pincode || '',
+      gstNumber: customer.gstNumber || '',
+      panNumber: customer.panNumber || '',
     });
     setEditingCustomerId(customer.id || null);
     setIsAddingCustomer(true);
@@ -120,25 +120,25 @@ export default function CustomerManagement() {
   const handleDeleteCustomer = async (id: string, companyName: string) => {
     const confirmed = await ask(
       `Are you sure you want to delete customer "${companyName}"?\n\nThis action cannot be undone.`,
-      { 
-        title: 'Confirm Deletion', 
-        type: 'warning' 
+      {
+        title: 'Confirm Deletion',
+        type: 'warning'
       }
     );
-    
+
     if (confirmed) {
       try {
-        await deleteCustomer(id);
+        await dbService.deleteCustomer(id);
         await loadCustomers();
-        await message(`Customer "${companyName}" has been deleted successfully.`, { 
-          title: 'Deleted', 
-          type: 'info' 
+        await message(`Customer "${companyName}" has been deleted successfully.`, {
+          title: 'Deleted',
+          type: 'info'
         });
       } catch (error) {
         console.error('Error deleting customer:', error);
-        await message('Failed to delete customer. Please try again.', { 
-          title: 'Error', 
-          type: 'error' 
+        await message('Failed to delete customer. Please try again.', {
+          title: 'Error',
+          type: 'error'
         });
       }
     }
