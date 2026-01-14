@@ -1,8 +1,9 @@
 import Database from 'tauri-plugin-sql-api';
+import { Invoice, Customer } from '../types/invoice';
+import { backupService } from './backup';
 import { getCompanySettings, getAllCustomers } from '../utils/tauriStorage';
-import { Customer, Invoice } from '../types/invoice';
 
-const DB_NAME = 'invoices.db';
+const DB_NAME = 'sqlite:invoices.db';
 
 export class DatabaseService {
     private static instance: DatabaseService;
@@ -19,7 +20,7 @@ export class DatabaseService {
 
     public async init(): Promise<void> {
         if (this.db) return;
-        this.db = await Database.load(`sqlite:${DB_NAME}`);
+        this.db = await Database.load(DB_NAME);
         await this.initSchema();
         await this.migrateFromJsonIfNeeded();
     }
@@ -29,45 +30,45 @@ export class DatabaseService {
 
         // Settings Table
         await this.db.execute(`
-      CREATE TABLE IF NOT EXISTS settings (
-        key TEXT PRIMARY KEY,
-        value TEXT
-      );
-    `);
+            CREATE TABLE IF NOT EXISTS settings(
+                key TEXT PRIMARY KEY,
+                value TEXT
+            );
+        `);
 
         // Customers Table
         await this.db.execute(`
-      CREATE TABLE IF NOT EXISTS customers (
-        id TEXT PRIMARY KEY,
-        company_name TEXT,
-        gst_number TEXT,
-        pan_number TEXT,
-        address_line1 TEXT,
-        address_line2 TEXT,
-        address_line3 TEXT,
-        city TEXT,
-        state TEXT,
-        pincode TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+            CREATE TABLE IF NOT EXISTS customers(
+                id TEXT PRIMARY KEY,
+                company_name TEXT,
+                gst_number TEXT,
+                pan_number TEXT,
+                address_line1 TEXT,
+                address_line2 TEXT,
+                address_line3 TEXT,
+                city TEXT,
+                state TEXT,
+                pincode TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
 
         // Invoices Table
         await this.db.execute(`
-      CREATE TABLE IF NOT EXISTS invoices (
-        invoice_number TEXT PRIMARY KEY,
-        financial_year TEXT,
-        customer_id TEXT,
-        invoice_date TEXT,
-        grand_total REAL,
-        status TEXT, -- 'DRAFT', 'GENERATED'
-        json_data TEXT, -- Full JSON blob for LineItems and nested data
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        work_order_reference TEXT,
-        work_order_date TEXT,
-        FOREIGN KEY(customer_id) REFERENCES customers(id)
-      );
-    `);
+            CREATE TABLE IF NOT EXISTS invoices(
+                invoice_number TEXT PRIMARY KEY,
+                financial_year TEXT,
+                customer_id TEXT,
+                invoice_date TEXT,
+                grand_total REAL,
+                status TEXT, -- 'DRAFT', 'GENERATED'
+                json_data TEXT, --Full JSON blob for LineItems and nested data
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                work_order_reference TEXT,
+                work_order_date TEXT,
+                FOREIGN KEY(customer_id) REFERENCES customers(id)
+            );
+        `);
     }
 
     private async migrateFromJsonIfNeeded(): Promise<void> {
@@ -93,8 +94,6 @@ export class DatabaseService {
             // Mark migration as complete
             await this.db.execute('INSERT INTO settings (key, value) VALUES (?, ?)', ['migration_complete', 'true']);
 
-            // Optionally rename old JSON files to .bak
-            // We'll skip destructive actions for now until specific verification
             console.log('Migration completed successfully.');
         } catch (error) {
             console.error('Migration failed:', error);
@@ -111,12 +110,12 @@ export class DatabaseService {
     public async upsertCustomer(customer: Customer): Promise<void> {
         const db = await this.getDb();
         await db.execute(
-            `INSERT INTO customers (id, company_name, gst_number, pan_number, address_line1, address_line2, address_line3, city, state, pincode)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       ON CONFLICT(id) DO UPDATE SET
-       company_name=excluded.company_name, gst_number=excluded.gst_number, pan_number=excluded.pan_number,
-       address_line1=excluded.address_line1, address_line2=excluded.address_line2, address_line3=excluded.address_line3,
-       city=excluded.city, state=excluded.state, pincode=excluded.pincode`,
+            `INSERT INTO customers(id, company_name, gst_number, pan_number, address_line1, address_line2, address_line3, city, state, pincode)
+             VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+             ON CONFLICT(id) DO UPDATE SET
+             company_name = excluded.company_name, gst_number = excluded.gst_number, pan_number = excluded.pan_number,
+             address_line1 = excluded.address_line1, address_line2 = excluded.address_line2, address_line3 = excluded.address_line3,
+             city = excluded.city, state = excluded.state, pincode = excluded.pincode`,
             [
                 customer.id,
                 customer.companyName,
@@ -130,11 +129,13 @@ export class DatabaseService {
                 customer.pincode || '',
             ]
         );
+        backupService.notifyChange();
     }
 
     public async deleteCustomer(id: string): Promise<void> {
         const db = await this.getDb();
         await db.execute('DELETE FROM customers WHERE id = $1', [id]);
+        backupService.notifyChange();
     }
 
     public async getAllCustomers(): Promise<Customer[]> {
@@ -157,26 +158,17 @@ export class DatabaseService {
     public async saveInvoice(invoice: Invoice): Promise<void> {
         const db = await this.getDb();
 
-        // Ensure customer exists/is updated
-        if (invoice.customer) { // Assuming customer object is embedded or we construct ID logic
-            // For now, if we don't have a distinct customer ID in invoice, we might need to handle it.
-            // In the current app, invoice.customer is an object.
-            // We'll rely on the UI to look up or create customers.
-            // But for storing the invoice, we serialize the whole thing into json_data
-            // and extract key fields for querying.
-        }
-
         await db.execute(
-            `INSERT INTO invoices (invoice_number, financial_year, customer_id, invoice_date, grand_total, status, work_order_reference, work_order_date, json_data)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       ON CONFLICT(invoice_number) DO UPDATE SET
-       customer_id=excluded.customer_id, invoice_date=excluded.invoice_date, grand_total=excluded.grand_total,
-       status=excluded.status, work_order_reference=excluded.work_order_reference, work_order_date=excluded.work_order_date,
-       json_data=excluded.json_data`,
+            `INSERT INTO invoices(invoice_number, financial_year, customer_id, invoice_date, grand_total, status, work_order_reference, work_order_date, json_data)
+             VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             ON CONFLICT(invoice_number) DO UPDATE SET
+             customer_id = excluded.customer_id, invoice_date = excluded.invoice_date, grand_total = excluded.grand_total,
+             status = excluded.status, work_order_reference = excluded.work_order_reference, work_order_date = excluded.work_order_date,
+             json_data = excluded.json_data`,
             [
                 invoice.invoiceNumber,
                 invoice.financialYear,
-                'UNKNOWN', // Place holder, will optimize later if we start linking by ID
+                'UNKNOWN',
                 invoice.invoiceDate,
                 invoice.grandTotal,
                 'GENERATED',
@@ -185,6 +177,7 @@ export class DatabaseService {
                 JSON.stringify(invoice)
             ]
         );
+        backupService.notifyChange();
     }
 
     public async getSetting(key: string): Promise<string | null> {
@@ -196,6 +189,7 @@ export class DatabaseService {
     public async saveSetting(key: string, value: string): Promise<void> {
         const db = await this.getDb();
         await db.execute('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value=excluded.value', [key, value]);
+        backupService.notifyChange();
     }
 
     // --- Convenience Wrappers for Settings & Drafts ---

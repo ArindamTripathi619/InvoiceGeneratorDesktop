@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Upload, Save, Image as ImageIcon, Loader2, Cloud, RefreshCw, Check, Link as LinkIcon, DownloadCloud } from 'lucide-react';
-import { message, ask } from '@tauri-apps/api/dialog';
-import { open as openUrl } from '@tauri-apps/api/shell';
+import { Upload, Save, Image as ImageIcon, Loader2, Folder, Check, AlertCircle, HardDrive, FileUp, Settings as SettingsIcon, CloudOff, DownloadCloud } from 'lucide-react';
+import { message, open, ask } from '@tauri-apps/api/dialog';
 import { CompanySettings } from '../types/invoice';
 import { saveCompanySettings, getCompanySettings, saveStampSignature, getStampSignature, saveCompanyLogo, getCompanyLogo } from '../utils/tauriStorage';
-import { driveService } from '../services/drive';
+import { backupService } from '../services/backup';
 
 export default function Settings() {
   const [settings, setSettings] = useState<CompanySettings>({
@@ -22,109 +21,113 @@ export default function Settings() {
   const [isUploadingLogo, setIsUploadingLogo] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Drive State
-  const [driveConnected, setDriveConnected] = useState(false);
-  const [verificationData, setVerificationData] = useState<{ user_code: string, verification_url: string } | null>(null);
-  const [clientId, setClientId] = useState('');
-  const [clientSecret, setClientSecret] = useState('');
-  const [isConnectingDrive, setIsConnectingDrive] = useState(false);
+  // Backup State
+  const [backupPath, setBackupPath] = useState('');
+  const [autoBackup, setAutoBackup] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
-  const [backups, setBackups] = useState<any[]>([]);
-  const [showBackups, setShowBackups] = useState(false);
+  const [cloudLink, setCloudLink] = useState('');
+  const [isCloudRestoring, setIsCloudRestoring] = useState(false);
 
   useEffect(() => {
-    const checkDriveAuth = async () => {
-      const isAuth_ = await driveService.loadToken();
-      setDriveConnected(isAuth_);
-    };
-    checkDriveAuth();
+    // Poll briefly to ensure service settings are loaded
+    const timer = setTimeout(() => {
+      setBackupPath(backupService.getBackupPath());
+      setAutoBackup(backupService.isAutoBackupEnabled());
+      setCloudLink(backupService.getRecoveryLink());
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
-  const handleConnectDrive = async () => {
-    if (!clientId) {
-      await message('Please enter a Google Cloud Client ID.', { title: 'Missing Credentials', type: 'error' });
-      return;
-    }
-
-    setIsConnectingDrive(true);
-    driveService.setCredentials(clientId, clientSecret);
-
+  const handleSelectBackupFolder = async () => {
     try {
-      const data = await driveService.startDeviceAuth();
-      setVerificationData({
-        user_code: data.user_code,
-        verification_url: data.verification_url
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: 'Select Backup Folder (e.g., Google Drive)'
       });
 
-      // Open URL automatically if possible
-      await openUrl(data.verification_url);
+      if (selected && typeof selected === 'string') {
+        setBackupPath(selected);
+        await backupService.setBackupPath(selected);
 
-      // Poll
-      const token = await driveService.pollDeviceToken(data.device_code, data.interval);
-      if (token) {
-        setDriveConnected(true);
-        setVerificationData(null);
-        await message('Successfully connected to Google Drive!', { title: 'Connected', type: 'info' });
+        // Default to enabling auto-backup when folder is chosen
+        if (!autoBackup) {
+          setAutoBackup(true);
+          await backupService.setAutoBackup(true);
+        }
+
+        await message('Backup folder selected successfully!', { title: 'Success', type: 'info' });
       }
-    } catch (error: any) {
-      console.error('Drive auth error:', error);
-      await message(`Connection failed: ${error.message}`, { title: 'Error', type: 'error' });
-      setVerificationData(null);
-    } finally {
-      setIsConnectingDrive(false);
+    } catch (e: any) {
+      console.error(e);
+      await message('Failed to select folder', { title: 'Error', type: 'error' });
     }
   };
 
-  const handleDisconnectDrive = async () => {
-    await driveService.logout();
-    setDriveConnected(false);
-    setVerificationData(null);
-    setShowBackups(false);
+  const handleToggleAutoBackup = async () => {
+    const newVal = !autoBackup;
+    setAutoBackup(newVal);
+    await backupService.setAutoBackup(newVal);
   };
 
-  const handleBackup = async () => {
+  const handleBackupNow = async () => {
     setIsBackingUp(true);
     try {
-      await driveService.uploadDatabase();
-      await message('Database backup uploaded successfully!', { title: 'Success', type: 'info' });
-    } catch (error: any) {
-      console.error('Backup error:', error);
-      await message(`Backup failed: ${error.message}`, { title: 'Error', type: 'error' });
+      await backupService.performBackup();
+      await message(`Backup successful!`, { title: 'Success', type: 'info' });
+    } catch (e: any) {
+      await message(`Backup failed: ${e.message}`, { title: 'Error', type: 'error' });
     } finally {
       setIsBackingUp(false);
     }
   };
 
-  const handleFetchBackups = async () => {
+  const handleRestoreFile = async () => {
     try {
-      const files = await driveService.listBackups();
-      setBackups(files);
-      setShowBackups(true);
-    } catch (error: any) {
-      await message(`Failed to list backups: ${error.message}`, { title: 'Error', type: 'error' });
+      const selected = await open({
+        directory: false,
+        multiple: false,
+        filters: [{ name: 'SQLite Database', extensions: ['db'] }],
+        title: 'Select Database to Restore'
+      });
+
+      if (selected && typeof selected === 'string') {
+        const confirmed = await ask(`Are you sure you want to restore from:\n${selected}\n\nThis will OVERWRITE your current data.`, {
+          title: 'Confirm Restore',
+          type: 'warning'
+        });
+
+        if (confirmed) {
+          setIsRestoring(true);
+          try {
+            await backupService.restoreFrom(selected);
+            await message('Restore successful! The app will reload.', { title: 'Success', type: 'info' });
+            window.location.reload();
+          } catch (e: any) {
+            await message(`Restore failed: ${e.message}`, { title: 'Error', type: 'error' });
+            setIsRestoring(false);
+          }
+        }
+      }
+    } catch (e: any) {
+      await message('Failed to select file', { title: 'Error', type: 'error' });
     }
   };
 
-  const handleRestoreBackup = async (fileId: string) => {
-    const confirmed = await ask(`Are you sure you want to restore this backup?\n\nThis will OVERWRITE your current data. This action cannot be undone.`, {
-      title: 'Confirm Restore',
-      type: 'warning'
-    });
-
-    if (!confirmed) return;
-
-    setIsRestoring(true);
+  const handleCloudRestore = async () => {
+    if (!cloudLink) return;
     try {
-      await driveService.restoreBackup(fileId);
-      await message('Data restored successfully! The application will restart to apply changes.', { title: 'Restored', type: 'info' });
-      // Ideally restart app. user must restart manually for now.
+      const confirmed = await ask('This will overwrite your current database. Are you sure?', { title: 'Disaster Recovery', type: 'warning' });
+      if (!confirmed) return;
+
+      setIsCloudRestoring(true);
+      await backupService.restoreFromCloudLink(cloudLink);
+      await message('Restored successfully from Cloud Link! The app will reload.', { title: 'Success', type: 'info' });
       window.location.reload();
-    } catch (error: any) {
-      console.error('Restore error:', error);
-      await message(`Restore failed: ${error.message}`, { title: 'Error', type: 'error' });
-    } finally {
-      setIsRestoring(false);
+    } catch (e: any) {
+      await message(`Cloud Restore failed: ${e.message}`, { title: 'Error', type: 'error' });
+      setIsCloudRestoring(false);
     }
   };
 
@@ -360,127 +363,104 @@ export default function Settings() {
           <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 transition-colors duration-200">Google Drive Backup</h2>
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 transition-colors duration-200">Local Backup & Sync</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
-                  Connect your Google Drive to enable cloud backups and restore data.
+                  Configure a local folder (e.g., Google Drive, Dropbox) for automatic backups.
                 </p>
               </div>
-              {driveConnected && <span className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900 px-3 py-1 rounded-full text-sm font-medium"><Check size={16} /> Connected</span>}
+              {backupPath ? (
+                <span className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900 px-3 py-1 rounded-full text-sm font-medium">
+                  <Check size={16} /> Active
+                </span>
+              ) : (
+                <span className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900 px-3 py-1 rounded-full text-sm font-medium">
+                  <AlertCircle size={16} /> Not Configured
+                </span>
+              )}
             </div>
 
             <div className="space-y-6">
-              {!driveConnected && !verificationData && (
-                <div className="space-y-4">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">To authorize, you need a Google Cloud Client ID (Desktop type).</p>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client ID</label>
-                    <input
-                      type="text"
-                      value={clientId}
-                      onChange={(e) => setClientId(e.target.value)}
-                      placeholder="xxxxxxxxxxxx-xxxxxxxxxxxxxxxx.apps.googleusercontent.com"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Secret (Optional)</label>
-                    <input
-                      type="password"
-                      value={clientSecret}
-                      onChange={(e) => setClientSecret(e.target.value)}
-                      placeholder="Client Secret"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleConnectDrive}
-                    disabled={isConnectingDrive || !clientId}
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {isConnectingDrive ? <Loader2 size={20} className="animate-spin" /> : <LinkIcon size={20} />}
-                    Connect Google Drive
-                  </button>
-                </div>
-              )}
-
-              {verificationData && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700">
-                  <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Action Required</h3>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-                    Please visit <a href={verificationData.verification_url} target="_blank" className="underline font-bold" onClick={(e) => { e.preventDefault(); openUrl(verificationData.verification_url); }}>{verificationData.verification_url}</a> and enter the code below:
-                  </p>
-                  <div className="text-2xl font-mono font-bold text-center tracking-widest bg-white dark:bg-gray-800 p-3 rounded border border-gray-300 dark:border-gray-600 select-all">
-                    {verificationData.user_code}
-                  </div>
-                  <div className="mt-4 flex justify-center">
-                    <Loader2 className="animate-spin text-yellow-600" />
-                    <span className="ml-2 text-sm text-yellow-600">Waiting for authorization...</span>
-                  </div>
-                </div>
-              )}
-
-              {driveConnected && (
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-4">
-                    <button
-                      onClick={handleBackup}
-                      disabled={isBackingUp}
-                      className="flex items-center gap-2 px-6 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-                    >
-                      {isBackingUp ? <Loader2 size={20} className="animate-spin" /> : <Cloud size={20} />}
-                      Backup Now
-                    </button>
-
-                    <button
-                      onClick={handleFetchBackups}
-                      className="flex items-center gap-2 px-6 py-3 bg-gray-600 dark:bg-gray-500 text-white rounded-lg hover:bg-gray-700"
-                    >
-                      <RefreshCw size={20} />
-                      List Backups
-                    </button>
-
-                    <button
-                      onClick={handleDisconnectDrive}
-                      className="flex items-center gap-2 px-6 py-3 border border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg ml-auto"
-                    >
-                      Disconnect
-                    </button>
-                  </div>
-
-                  {showBackups && (
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-4">
-                      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 font-medium">
-                        Available Backups
-                      </div>
-                      {backups.length === 0 ? (
-                        <div className="p-4 text-center text-gray-500">No backups found.</div>
-                      ) : (
-                        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                          {backups.map(file => (
-                            <li key={file.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                              <div>
-                                <p className="font-medium text-gray-800 dark:text-gray-200">{file.name}</p>
-                                <p className="text-xs text-gray-500">{new Date(file.createdTime).toLocaleString()} • {(file.size / 1024).toFixed(1)} KB</p>
-                              </div>
-                              <button
-                                onClick={() => handleRestoreBackup(file.id)}
-                                disabled={isRestoring}
-                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1"
-                              >
-                                {isRestoring ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />}
-                                Restore
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+              <div className="grid gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Backup Location</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 truncate flex items-center">
+                      <Folder size={18} className="mr-2 opacity-50" />
+                      {backupPath || 'No folder selected'}
                     </div>
-                  )}
+                    <button
+                      onClick={handleSelectBackupFolder}
+                      className="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors font-medium flex items-center gap-2"
+                    >
+                      <SettingsIcon size={18} /> Change
+                    </button>
+                  </div>
                 </div>
-              )}
+
+                <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <div
+                    onClick={handleToggleAutoBackup}
+                    className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${autoBackup ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                  >
+                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${autoBackup ? 'translate-x-6' : 'translate-x-0'}`} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-gray-200">Auto-Backup on Save</p>
+                    <p className="text-xs text-gray-500">Automatically creates a backup/sync copy whenever you save data.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                <button
+                  onClick={handleBackupNow}
+                  disabled={isBackingUp || !backupPath}
+                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isBackingUp ? <Loader2 size={20} className="animate-spin" /> : <HardDrive size={20} />}
+                  Backup Now
+                </button>
+
+                <button
+                  onClick={handleRestoreFile}
+                  disabled={isRestoring}
+                  className="flex items-center gap-2 px-6 py-3 bg-gray-600 dark:bg-gray-500 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 ml-auto"
+                >
+                  {isRestoring ? <Loader2 size={20} className="animate-spin" /> : <FileUp size={20} />}
+                  Restore from File
+                </button>
+              </div>
             </div>
+          </div>
+
+          <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-lg border border-red-100 dark:border-red-900/30">
+            <h2 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-4 flex items-center gap-2">
+              <CloudOff size={24} /> Disaster Recovery
+            </h2>
+            <p className="text-sm text-red-600 dark:text-red-300 mb-4">
+              Pull your database directly from a Google Drive **Folder Link** (containing <code>invoices.db</code>) or a direct File Link.
+              Once set, you can use the 'Recover' button anytime to pull the latest version.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Paste Google Drive Folder Link or File Link"
+                value={cloudLink}
+                onChange={(e) => setCloudLink(e.target.value)}
+                className="flex-1 px-4 py-2 border border-red-200 dark:border-red-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-lg text-sm"
+              />
+              <button
+                onClick={handleCloudRestore}
+                disabled={isCloudRestoring || !cloudLink}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {isCloudRestoring ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />}
+                Recover
+              </button>
+            </div>
+            <p className="text-xs text-red-500 mt-2">
+              * Note: Please ensure you have selected a backup/download folder above first.
+            </p>
           </div>
 
           <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
@@ -591,7 +571,8 @@ export default function Settings() {
             </div>
           </div>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }
