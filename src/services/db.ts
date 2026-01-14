@@ -186,9 +186,24 @@ export class DatabaseService {
                 'GENERATED',
                 invoice.workOrderReference || '',
                 invoice.workOrderDate || '',
-                JSON.stringify(invoice)
+                JSON.stringify({ ...invoice, id: invoice.invoiceNumber }) // Ensure ID is in JSON
             ]
         );
+        backupService.notifyChange();
+    }
+
+    public async getAllInvoices(): Promise<Invoice[]> {
+        const db = await this.getDb();
+        const rows = await db.select<any[]>('SELECT * FROM invoices ORDER BY created_at DESC');
+        return rows.map(row => {
+            const invoice = JSON.parse(row.json_data);
+            return { ...invoice, id: row.invoice_number }; // Force sync ID with PK
+        });
+    }
+
+    public async deleteInvoice(invoiceNumber: string): Promise<void> {
+        const db = await this.getDb();
+        await db.execute('DELETE FROM invoices WHERE invoice_number = $1', [invoiceNumber]);
         backupService.notifyChange();
     }
 

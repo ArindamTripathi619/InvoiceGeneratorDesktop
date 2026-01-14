@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FileText, Download, Trash2, Search, Loader2 } from 'lucide-react';
 import { ask, message } from '@tauri-apps/api/dialog';
 import { Invoice } from '../types/invoice';
-import { getAllInvoices, deleteInvoice, getCompanySettings, getStampSignature, getCompanyLogo } from '../utils/tauriStorage';
+import { dbService } from '../services/db';
 import { generateInvoicePDF } from '../services/pdfGenerator';
 
 export default function InvoiceHistory() {
@@ -33,7 +33,7 @@ export default function InvoiceHistory() {
   const loadInvoices = async () => {
     setIsLoading(true);
     try {
-      const allInvoices = await getAllInvoices();
+      const allInvoices = await dbService.getAllInvoices();
       setInvoices(allInvoices);
       setFilteredInvoices(allInvoices);
     } catch (error) {
@@ -47,19 +47,19 @@ export default function InvoiceHistory() {
     if (!invoice.id) return;
     setGeneratingPdfId(invoice.id);
     try {
-      const companySettings = await getCompanySettings();
-      const stampSignature = await getStampSignature();
-      const companyLogo = await getCompanyLogo();
+      const companySettings = await dbService.getCompanySettings();
+      const stampSignature = await dbService.getStampSignature();
+      const companyLogo = await dbService.getCompanyLogo();
       await generateInvoicePDF(invoice, companySettings, stampSignature || undefined, companyLogo || undefined);
-      await message('PDF has been generated and saved successfully!', { 
-        title: 'Success', 
-        type: 'info' 
+      await message('PDF has been generated and saved successfully!', {
+        title: 'Success',
+        type: 'info'
       });
     } catch (error) {
       console.error('Error regenerating PDF:', error);
-      await message('Failed to generate PDF. Please check your settings and try again.', { 
-        title: 'Error', 
-        type: 'error' 
+      await message('Failed to generate PDF. Please check your settings and try again.', {
+        title: 'Error',
+        type: 'error'
       });
     } finally {
       setGeneratingPdfId(null);
@@ -70,25 +70,25 @@ export default function InvoiceHistory() {
     const formattedInvoiceNumber = `AS/${financialYear}/${invoiceNumber}`;
     const confirmed = await ask(
       `Are you sure you want to delete invoice ${formattedInvoiceNumber}?\n\nThis action cannot be undone.`,
-      { 
-        title: 'Confirm Deletion', 
-        type: 'warning' 
+      {
+        title: 'Confirm Deletion',
+        type: 'warning'
       }
     );
-    
+
     if (confirmed) {
       try {
-        await deleteInvoice(id);
+        await dbService.deleteInvoice(id);
         await loadInvoices();
-        await message(`Invoice ${formattedInvoiceNumber} has been deleted successfully.`, { 
-          title: 'Deleted', 
-          type: 'info' 
+        await message(`Invoice ${formattedInvoiceNumber} has been deleted successfully.`, {
+          title: 'Deleted',
+          type: 'info'
         });
       } catch (error) {
         console.error('Error deleting invoice:', error);
-        await message('Failed to delete invoice. Please try again.', { 
-          title: 'Error', 
-          type: 'error' 
+        await message('Failed to delete invoice. Please try again.', {
+          title: 'Error',
+          type: 'error'
         });
       }
     }

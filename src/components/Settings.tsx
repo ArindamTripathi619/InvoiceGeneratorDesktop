@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Upload, Save, Image as ImageIcon, Loader2, Folder, Check, AlertCircle, HardDrive, FileUp, Settings as SettingsIcon, CloudOff, DownloadCloud } from 'lucide-react';
 import { message, open, ask } from '@tauri-apps/api/dialog';
 import { CompanySettings } from '../types/invoice';
-import { saveCompanySettings, getCompanySettings, saveStampSignature, getStampSignature, saveCompanyLogo, getCompanyLogo } from '../utils/tauriStorage';
+import { dbService } from '../services/db';
 import { backupService } from '../services/backup';
 
 export default function Settings() {
@@ -135,13 +135,15 @@ export default function Settings() {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const loadedSettings = await getCompanySettings();
-        setSettings(loadedSettings);
-        const loadedStamp = await getStampSignature();
+        const loadedSettings = await dbService.getCompanySettings();
+        if (loadedSettings) {
+          setSettings(loadedSettings);
+        }
+        const loadedStamp = await dbService.getStampSignature();
         if (loadedStamp) {
           setPreviewUrl(loadedStamp);
         }
-        const loadedLogo = await getCompanyLogo();
+        const loadedLogo = await dbService.getCompanyLogo();
         if (loadedLogo) {
           setLogoPreviewUrl(loadedLogo);
         }
@@ -157,7 +159,7 @@ export default function Settings() {
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
-      await saveCompanySettings(settings);
+      await dbService.saveCompanySettings(settings);
       await message('Company settings have been saved successfully!', {
         title: 'Success',
         type: 'info'
@@ -199,7 +201,7 @@ export default function Settings() {
       try {
         const dataUrl = event.target?.result as string;
         setPreviewUrl(dataUrl);
-        await saveStampSignature(dataUrl);
+        await dbService.saveStampSignature(dataUrl);
         await message('Stamp and signature have been uploaded successfully!', {
           title: 'Success',
           type: 'info'
@@ -243,7 +245,7 @@ export default function Settings() {
       try {
         const dataUrl = event.target?.result as string;
         setLogoPreviewUrl(dataUrl);
-        await saveCompanyLogo(dataUrl);
+        await dbService.saveCompanyLogo(dataUrl);
         await message('Company logo has been uploaded successfully!', {
           title: 'Success',
           type: 'info'
