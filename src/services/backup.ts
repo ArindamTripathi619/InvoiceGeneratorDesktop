@@ -153,11 +153,13 @@ export class BackupService {
         console.log('Downloading to:', tempPath);
 
         try {
+            console.log('Invoking download_gdrive_file with URL:', targetUrl);
             await invoke('download_gdrive_file', { url: targetUrl, outputPath: tempPath });
-            console.log('Download complete. Restoring...');
+            console.log('Download complete. Invoking restoreFrom...');
             await this.restoreFrom(tempPath);
+            console.log('Restore successfully triggered.');
         } catch (e) {
-            console.error('Cloud restore failed', e);
+            console.error('Cloud restore failed in backup service:', e);
             throw e;
         }
     }

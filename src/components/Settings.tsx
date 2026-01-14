@@ -126,7 +126,7 @@ export default function Settings() {
       await message('Restored successfully from Cloud Link! The app will reload.', { title: 'Success', type: 'info' });
       window.location.reload();
     } catch (e: any) {
-      await message(`Cloud Restore failed: ${e.message}`, { title: 'Error', type: 'error' });
+      await message(`Cloud Restore failed: ${e.message || e}`, { title: 'Error', type: 'error' });
       setIsCloudRestoring(false);
     }
   };
