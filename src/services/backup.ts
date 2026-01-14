@@ -149,7 +149,7 @@ export class BackupService {
         // But for "Synced" strategy, backupPath is key.
         if (!this.backupPath) throw new Error('Please select a Backup Folder (Local Sync Folder) first.');
 
-        const tempPath = `${this.backupPath}${path.sep}restored_invoices.db`;
+        const tempPath = await path.join(this.backupPath, 'restored_invoices.db');
         console.log('Downloading to:', tempPath);
 
         try {
