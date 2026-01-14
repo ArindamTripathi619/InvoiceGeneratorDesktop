@@ -34,6 +34,63 @@ interface InvoiceHeaderProps {
     setPanNumber: (val: string) => void;
 }
 
+const SmartDateInput: React.FC<{
+    label: string,
+    value: string, // YYYY-MM-DD
+    onChange: (val: string) => void,
+    required?: boolean
+}> = ({ label, value, onChange, required }) => {
+    // Internal state for the display value (DD-MM-YYYY)
+    const [displayValue, setDisplayValue] = React.useState('');
+
+    // Sync internal state with external value when it changes
+    React.useEffect(() => {
+        if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            const [y, m, d] = value.split('-');
+            setDisplayValue(`${d}-${m}-${y}`);
+        } else {
+            setDisplayValue(value || '');
+        }
+    }, [value]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let val = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        if (val.length > 8) val = val.slice(0, 8);
+
+        // Apply masking DD-MM-YYYY
+        let formatted = val;
+        if (val.length > 2) formatted = val.slice(0, 2) + '-' + val.slice(2);
+        if (val.length > 4) formatted = formatted.slice(0, 5) + '-' + formatted.slice(5);
+
+        setDisplayValue(formatted);
+
+        // If complete (8 digits), update parent with YYYY-MM-DD
+        if (val.length === 8) {
+            const d = val.slice(0, 2);
+            const m = val.slice(2, 4);
+            const y = val.slice(4, 8);
+            onChange(`${y}-${m}-${d}`);
+        }
+    };
+
+    return (
+        <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+                {label} {required && <span className="text-red-500">*</span>}
+            </label>
+            <input
+                type="text"
+                value={displayValue}
+                onChange={handleInputChange}
+                placeholder="DD-MM-YYYY"
+                maxLength={10}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
+            />
+            <p className="text-xs text-gray-500 mt-1">Format: DD-MM-YYYY</p>
+        </div>
+    );
+};
+
 export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
     invoiceNumber,
     setInvoiceNumber,
@@ -99,18 +156,12 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400 transition-colors duration-200"
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                            Invoice Date <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="date"
-                            value={invoiceDate}
-                            onChange={(e) => setInvoiceDate(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Format: DD-MM-YYYY</p>
-                    </div>
+                    <SmartDateInput
+                        label="Invoice Date"
+                        value={invoiceDate}
+                        onChange={setInvoiceDate}
+                        required
+                    />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -126,18 +177,11 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                            Work Order Date
-                        </label>
-                        <input
-                            type="date"
-                            value={workOrderDate}
-                            onChange={(e) => setWorkOrderDate(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Format: DD-MM-YYYY</p>
-                    </div>
+                    <SmartDateInput
+                        label="Work Order Date"
+                        value={workOrderDate}
+                        onChange={setWorkOrderDate}
+                    />
                 </div>
             </div>
 
