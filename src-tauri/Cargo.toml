@@ -13,7 +13,7 @@ edition = "2021"
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
-tauri = { version = "1.5", features = [ "fs-write-file", "http-all", "fs-exists", "fs-read-file", "fs-create-dir", "dialog-message", "dialog-open", "dialog-save", "path-all", "shell-open"] }
+tauri = { version = "1.5", features = [ "dialog-ask", "fs-write-file", "http-all", "fs-exists", "fs-read-file", "fs-create-dir", "dialog-message", "dialog-open", "dialog-save", "path-all", "shell-open"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tauri-plugin-sql = { path = "./plugins-workspace/plugins/sql", features = ["sqlite"] }
