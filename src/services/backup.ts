@@ -72,7 +72,7 @@ export class BackupService {
 
         // We need to append filename to path.
         if (!this.backupPath) throw new Error('No backup path configured');
-        const targetPath = `${this.backupPath}${path.sep}invoices.db`;
+        const targetPath = await path.join(this.backupPath, 'invoices.db');
 
         try {
             await invoke('export_database', { targetPath });
@@ -115,7 +115,7 @@ export class BackupService {
                 bytes[i] = binaryString.charCodeAt(i);
             }
 
-            const filePath = `${this.backupPath}${path.sep}${fileName}`;
+            const filePath = await path.join(this.backupPath, fileName);
             await invoke('save_file_content', { path: filePath, content: Array.from(bytes) });
         } catch (e) {
             console.error(`Failed to save image ${fileName}`, e);

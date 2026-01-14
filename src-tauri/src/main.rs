@@ -9,19 +9,28 @@ use std::fs;
 
 #[tauri::command]
 fn export_database(app_handle: tauri::AppHandle, target_path: String) -> Result<(), String> {
-    let app_data_dir = app_handle.path_resolver().app_data_dir().ok_or("Failed to resolve app data dir")?;
-    let db_path = app_data_dir.join("invoices.db");
-    if !db_path.exists() {
+    let config_dir = app_handle.path_resolver().app_config_dir().ok_or("Failed to resolve app config dir")?;
+    let data_dir = app_handle.path_resolver().app_data_dir().ok_or("Failed to resolve app data dir")?;
+    
+    let db_path_config = config_dir.join("invoices.db");
+    let db_path_data = data_dir.join("invoices.db");
+
+    let db_path = if db_path_config.exists() {
+        db_path_config
+    } else if db_path_data.exists() {
+        db_path_data
+    } else {
         return Err("Database file not found".to_string());
-    }
+    };
+
     fs::copy(&db_path, &target_path).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
 fn import_database(app_handle: tauri::AppHandle, source_path: String) -> Result<(), String> {
-    let app_data_dir = app_handle.path_resolver().app_data_dir().ok_or("Failed to resolve app data dir")?;
-    let db_path = app_data_dir.join("invoices.db");
+    let config_dir = app_handle.path_resolver().app_config_dir().ok_or("Failed to resolve app config dir")?;
+    let db_path = config_dir.join("invoices.db");
     
     if !std::path::Path::new(&source_path).exists() {
         return Err("Source file not found".to_string());
