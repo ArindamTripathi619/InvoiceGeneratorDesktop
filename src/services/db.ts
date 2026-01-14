@@ -1,4 +1,5 @@
 import Database from 'tauri-plugin-sql-api';
+import { createDir, exists, BaseDirectory } from '@tauri-apps/api/fs';
 import { Invoice, Customer } from '../types/invoice';
 import { backupService } from './backup';
 import { getCompanySettings, getAllCustomers } from '../utils/tauriStorage';
@@ -20,6 +21,17 @@ export class DatabaseService {
 
     public async init(): Promise<void> {
         if (this.db) return;
+
+        // Ensure generated directory exists for PDFs
+        try {
+            const hasDir = await exists('generated', { dir: BaseDirectory.AppData });
+            if (!hasDir) {
+                await createDir('generated', { dir: BaseDirectory.AppData, recursive: true });
+            }
+        } catch (e) {
+            console.error('Error creating generated directory:', e);
+        }
+
         this.db = await Database.load(DB_NAME);
         await this.initSchema();
         await this.migrateFromJsonIfNeeded();
@@ -168,7 +180,7 @@ export class DatabaseService {
             [
                 invoice.invoiceNumber,
                 invoice.financialYear,
-                'UNKNOWN',
+                invoice.customer.id || null, // Use the customer ID from the invoice object
                 invoice.invoiceDate,
                 invoice.grandTotal,
                 'GENERATED',

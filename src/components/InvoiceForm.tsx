@@ -223,6 +223,7 @@ export default function InvoiceForm() {
         workOrderReference,
         workOrderDate,
         customer: {
+          id: selectedCustomerId || undefined,
           companyName,
           addressLine1,
           addressLine2,
@@ -366,8 +367,8 @@ export default function InvoiceForm() {
           onClick={handleGeneratePDF}
           disabled={isGenerating}
           className={`flex items - center gap - 2 px - 6 py - 3 rounded - lg transition - colors ${isGenerating
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-green-600 hover:bg-green-700 text-white'
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-green-600 hover:bg-green-700 text-white'
             } `}
         >
           <Download size={20} />
