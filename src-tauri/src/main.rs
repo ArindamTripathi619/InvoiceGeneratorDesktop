@@ -84,7 +84,7 @@ fn download_gdrive_file(url: String, output_path: String) -> Result<(), String> 
                      final_file_id = Some(caps.get(1).unwrap().as_str().to_string());
                  } else {
                      // Try HTML pattern (Robust)
-                     let re_html = regex::Regex::new(r#"(?s)href="[^"]*/d/([a-zA-Z0-9_-]+)/view[^"]*"[^>]*>.*?<div class="flip-entry-title">invoices\.db</div>"#).unwrap();
+                      let re_html = regex::Regex::new(r#"(?s)/d/([a-zA-Z0-9_-]+)/view[^>]*>.*?invoices\.db"#).unwrap();
                      if let Some(caps) = re_html.captures(&text) {
                          final_file_id = Some(caps.get(1).unwrap().as_str().to_string());
                      }
