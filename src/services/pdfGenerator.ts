@@ -128,7 +128,7 @@ export async function generateInvoicePDF(
   doc.text('Date:- ', rightColumnX, customerNameY);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(51, 51, 51); // Dark gray for values
-  const invoiceDateFormatted = new Date(invoice.invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '.');
+  const invoiceDateFormatted = new Date(invoice.invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-');
   doc.text(invoiceDateFormatted, rightColumnX + 12, customerNameY);
 
   // Position Tax Invoice Ref. No. below the date
@@ -191,7 +191,7 @@ export async function generateInvoicePDF(
   doc.setTextColor(0, 0, 0); // Black for labels
   const workOrderLabel = 'Ref. Work Order No: - ';
   const workOrderValue = invoice.workOrderDate
-    ? `${invoice.workOrderReference} Dated- ${new Date(invoice.workOrderDate).toLocaleDateString('en-GB').replace(/\//g, '.')}`
+    ? `${invoice.workOrderReference} Dated- ${new Date(invoice.workOrderDate).toLocaleDateString('en-GB').replace(/\//g, '-')}`
     : invoice.workOrderReference;
 
   // Combine label and value for centering
