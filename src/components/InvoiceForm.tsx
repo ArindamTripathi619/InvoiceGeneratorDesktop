@@ -163,8 +163,12 @@ export default function InvoiceForm() {
       if (item.id === id) {
         const updated = { ...item, [field]: value };
         if (field === 'rate' || field === 'quantity') {
-          // For kWp calculations, multiply by 1000 to convert to watts
-          updated.amount = parseFloat((updated.rate * updated.quantity * 1000).toFixed(2));
+          /**
+           * BUSINESS LOGIC: The 'rate' is provided per Watt, but 'quantity' is in kWp.
+           * We multiply by 1000 to convert kWp to Watts before calculating the amount.
+           */
+          const KWP_TO_WATT_FACTOR = 1000;
+          updated.amount = parseFloat((updated.rate * updated.quantity * KWP_TO_WATT_FACTOR).toFixed(2));
         }
         return updated;
       }

@@ -66,12 +66,23 @@ class UpdateService {
     }
 
     private compareVersions(v1: string, v2: string): number {
-        const parts1 = v1.split('.').map(Number);
-        const parts2 = v2.split('.').map(Number);
-        for (let i = 0; i < 3; i++) {
-            if ((parts1[i] || 0) > (parts2[i] || 0)) return 1;
-            if ((parts1[i] || 0) < (parts2[i] || 0)) return -1;
+        const n1 = v1.split('-')[0].split('.').map(Number);
+        const n2 = v2.split('-')[0].split('.').map(Number);
+        const length = Math.max(n1.length, n2.length);
+
+        for (let i = 0; i < length; i++) {
+            const num1 = n1[i] || 0;
+            const num2 = n2[i] || 0;
+            if (num1 > num2) return 1;
+            if (num1 < num2) return -1;
         }
+
+        // Handle pre-release tags (v1.0.0-beta < v1.0.0)
+        // Note: Simple logic here: if one has a tag and the other doesn't, 
+        // the one without a tag is newer (e.g. 1.0.0 vs 1.0.0-alpha)
+        if (v1.includes('-') && !v2.includes('-')) return -1;
+        if (!v1.includes('-') && v2.includes('-')) return 1;
+
         return 0;
     }
 

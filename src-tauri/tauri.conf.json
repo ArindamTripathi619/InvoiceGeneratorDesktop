@@ -35,19 +35,27 @@
         "scope": [
           "$APPDATA/**",
           "$DOWNLOAD/**",
-          "$DESKTOP/**"
+          "$DESKTOP/**",
+          "$RESOURCE/**"
         ]
       },
       "path": {
-        "all": true
+        "all": false,
+        "appDataDir": true,
+        "configDir": true,
+        "downloadDir": true,
+        "desktopDir": true,
+        "join": true,
+        "sep": true
       },
       "http": {
-        "all": true,
+        "all": false,
         "request": true,
         "scope": [
           "https://accounts.google.com/*",
           "https://oauth2.googleapis.com/*",
-          "https://www.googleapis.com/*"
+          "https://www.googleapis.com/*",
+          "https://api.github.com/repos/ArindamTripathi619/InvoiceGeneratorDesktop/*"
         ]
       },
       "shell": {
@@ -86,7 +94,7 @@
       }
     },
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval' 'unsafe-inline';"
+      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';"
     },
     "windows": [
       {
