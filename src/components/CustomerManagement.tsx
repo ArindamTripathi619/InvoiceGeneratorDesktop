@@ -3,6 +3,7 @@ import { Users, Plus, Trash2, CreditCard as Edit2, X, Save, Loader2 } from 'luci
 import { ask, message } from '@tauri-apps/api/dialog';
 import { Customer } from '../types/invoice';
 import { dbService } from '../services/db';
+import { customerService } from '../services/customerService';
 
 export default function CustomerManagement() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -30,7 +31,7 @@ export default function CustomerManagement() {
   const loadCustomers = async () => {
     setIsLoading(true);
     try {
-      const customers = await dbService.getAllCustomers();
+      const customers = await customerService.getAllCustomers();
       setCustomers(customers);
     } catch (error) {
       console.error('Error loading customers:', error);
@@ -78,7 +79,7 @@ export default function CustomerManagement() {
         ? { ...formData, id: editingCustomerId }
         : { ...formData, id: Date.now().toString() }; // Generate ID if new
 
-      await dbService.upsertCustomer(customerToSave);
+      await customerService.upsertCustomer(customerToSave);
       await loadCustomers();
       resetForm();
       await message(
@@ -128,7 +129,7 @@ export default function CustomerManagement() {
 
     if (confirmed) {
       try {
-        await dbService.deleteCustomer(id);
+        await customerService.deleteCustomer(id);
         await loadCustomers();
         await message(`Customer "${companyName}" has been deleted successfully.`, {
           title: 'Deleted',

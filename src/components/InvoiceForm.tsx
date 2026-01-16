@@ -8,6 +8,8 @@ import { InvoiceHeader } from './invoice/InvoiceHeader';
 import { LineItemsTable } from './invoice/LineItemsTable';
 import { TaxSummary } from './invoice/TaxSummary';
 import { dbService } from '../services/db';
+import { customerService } from '../services/customerService';
+import { invoiceService } from '../services/invoiceService';
 
 export default function InvoiceForm() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -53,10 +55,10 @@ export default function InvoiceForm() {
 
   const loadData = async () => {
     try {
-      const customerList = await dbService.getAllCustomers();
+      const customerList = await customerService.getAllCustomers();
       setCustomers(customerList);
 
-      const draft = await dbService.getDraftInvoice();
+      const draft = await invoiceService.getDraftInvoice();
       if (draft) {
         if (draft.invoiceNumber) setInvoiceNumber(draft.invoiceNumber);
         if (draft.invoiceDate) setInvoiceDate(draft.invoiceDate);
@@ -114,7 +116,7 @@ export default function InvoiceForm() {
       cgstPercentage,
       sgstPercentage,
     };
-    await dbService.saveDraftInvoice(draft);
+    await invoiceService.saveDraftInvoice(draft);
   };
 
   const handleCustomerSelect = (customerId: string) => {
@@ -254,8 +256,8 @@ export default function InvoiceForm() {
 
       await generateInvoicePDF(invoice, companySettings, stampSignature || undefined, companyLogo || undefined);
 
-      await dbService.saveInvoice(invoice);
-      await dbService.clearDraftInvoice();
+      await invoiceService.saveInvoice(invoice);
+      await invoiceService.clearDraftInvoice();
 
       await message('Invoice generated successfully!', { title: 'Success', type: 'info' });
 
@@ -297,7 +299,7 @@ export default function InvoiceForm() {
     ]);
     setCgstPercentage(9);
     setSgstPercentage(9);
-    dbService.clearDraftInvoice();
+    invoiceService.clearDraftInvoice();
   };
 
   return (

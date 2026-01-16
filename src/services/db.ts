@@ -93,10 +93,13 @@ export class DatabaseService {
         console.log('Starting migration from JSON storage...');
 
         try {
+            // Import services here to avoid circular dependency
+            const { customerService } = await import('./customerService');
+
             // Migrate Customers
             const customers = await getAllCustomers();
             for (const customer of customers) {
-                await this.upsertCustomer(customer);
+                await customerService.upsertCustomer(customer);
             }
 
             // Migrate Settings (e.g. Company Settings)
@@ -119,94 +122,6 @@ export class DatabaseService {
         return this.db!;
     }
 
-    public async upsertCustomer(customer: Customer): Promise<void> {
-        const db = await this.getDb();
-        await db.execute(
-            `INSERT INTO customers(id, company_name, gst_number, pan_number, address_line1, address_line2, address_line3, city, state, pincode)
-             VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-             ON CONFLICT(id) DO UPDATE SET
-             company_name = excluded.company_name, gst_number = excluded.gst_number, pan_number = excluded.pan_number,
-             address_line1 = excluded.address_line1, address_line2 = excluded.address_line2, address_line3 = excluded.address_line3,
-             city = excluded.city, state = excluded.state, pincode = excluded.pincode`,
-            [
-                customer.id,
-                customer.companyName,
-                customer.gstNumber || '',
-                customer.panNumber || '',
-                customer.addressLine1,
-                customer.addressLine2 || '',
-                customer.addressLine3 || '',
-                customer.city || '',
-                customer.state || '',
-                customer.pincode || '',
-            ]
-        );
-        backupService.notifyChange();
-    }
-
-    public async deleteCustomer(id: string): Promise<void> {
-        const db = await this.getDb();
-        await db.execute('DELETE FROM customers WHERE id = $1', [id]);
-        backupService.notifyChange();
-    }
-
-    public async getAllCustomers(): Promise<Customer[]> {
-        const db = await this.getDb();
-        const rows = await db.select<any[]>('SELECT * FROM customers ORDER BY created_at DESC');
-        return rows.map(row => ({
-            id: row.id,
-            companyName: row.company_name,
-            gstNumber: row.gst_number,
-            panNumber: row.pan_number,
-            addressLine1: row.address_line1,
-            addressLine2: row.address_line2,
-            addressLine3: row.address_line3,
-            city: row.city,
-            state: row.state,
-            pincode: row.pincode,
-        }));
-    }
-
-    public async saveInvoice(invoice: Invoice): Promise<void> {
-        const db = await this.getDb();
-
-        await db.execute(
-            `INSERT INTO invoices(invoice_number, financial_year, customer_id, invoice_date, grand_total, status, work_order_reference, work_order_date, json_data)
-             VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
-             ON CONFLICT(invoice_number) DO UPDATE SET
-             customer_id = excluded.customer_id, invoice_date = excluded.invoice_date, grand_total = excluded.grand_total,
-             status = excluded.status, work_order_reference = excluded.work_order_reference, work_order_date = excluded.work_order_date,
-             json_data = excluded.json_data`,
-            [
-                invoice.invoiceNumber,
-                invoice.financialYear,
-                invoice.customer.id || null, // Use the customer ID from the invoice object
-                invoice.invoiceDate,
-                invoice.grandTotal,
-                'GENERATED',
-                invoice.workOrderReference || '',
-                invoice.workOrderDate || '',
-                JSON.stringify({ ...invoice, id: invoice.invoiceNumber }) // Ensure ID is in JSON
-            ]
-        );
-        backupService.notifyChange();
-    }
-
-    public async getAllInvoices(): Promise<Invoice[]> {
-        const db = await this.getDb();
-        const rows = await db.select<any[]>('SELECT * FROM invoices ORDER BY created_at DESC');
-        return rows.map(row => {
-            const invoice = JSON.parse(row.json_data);
-            return { ...invoice, id: row.invoice_number }; // Force sync ID with PK
-        });
-    }
-
-    public async deleteInvoice(invoiceNumber: string): Promise<void> {
-        const db = await this.getDb();
-        await db.execute('DELETE FROM invoices WHERE invoice_number = $1', [invoiceNumber]);
-        backupService.notifyChange();
-    }
-
     public async getSetting(key: string): Promise<string | null> {
         const db = await this.getDb();
         const result = await db.select<any[]>('SELECT value FROM settings WHERE key = $1', [key]);
@@ -219,7 +134,7 @@ export class DatabaseService {
         backupService.notifyChange();
     }
 
-    // --- Convenience Wrappers for Settings & Drafts ---
+    // --- Convenience Wrappers for Settings ---
 
     public async getCompanySettings(): Promise<any> {
         const val = await this.getSetting('company_settings');
@@ -244,20 +159,6 @@ export class DatabaseService {
 
     public async saveCompanyLogo(dataUrl: string): Promise<void> {
         await this.saveSetting('company_logo', dataUrl);
-    }
-
-    public async getDraftInvoice(): Promise<Partial<Invoice> | null> {
-        const val = await this.getSetting('draft_invoice');
-        return val ? JSON.parse(val) : null;
-    }
-
-    public async saveDraftInvoice(invoice: Partial<Invoice>): Promise<void> {
-        await this.saveSetting('draft_invoice', JSON.stringify(invoice));
-    }
-
-    public async clearDraftInvoice(): Promise<void> {
-        const db = await this.getDb();
-        await db.execute('DELETE FROM settings WHERE key = "draft_invoice"');
     }
 }
 

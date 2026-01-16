@@ -1,10 +1,5 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { save } from '@tauri-apps/api/dialog';
-import { writeBinaryFile, BaseDirectory } from '@tauri-apps/api/fs';
-import { Invoice, CompanySettings } from '../types/invoice';
-import { numberToWordsIndian } from '../utils/numberToWords';
-import { COMPANY_DETAILS } from '../utils/constants';
+// Module-level cache for images to avoid redundant processing/fetching
+const imageCache: Record<string, string> = {};
 
 export async function generateInvoicePDF(
   invoice: Invoice,
@@ -12,6 +7,14 @@ export async function generateInvoicePDF(
   stampSignatureDataUrl?: string,
   companyLogoDataUrl?: string
 ): Promise<void> {
+  // Update cache if new data provided
+  if (companyLogoDataUrl) imageCache.logo = companyLogoDataUrl;
+  if (stampSignatureDataUrl) imageCache.stamp = stampSignatureDataUrl;
+
+  // Use cached versions if not provided in arguments
+  const logo = companyLogoDataUrl || imageCache.logo;
+  const stamp = stampSignatureDataUrl || imageCache.stamp;
+
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageWidth = doc.internal.pageSize.getWidth();
   // const pageHeight = doc.internal.pageSize.getHeight();

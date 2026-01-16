@@ -3,6 +3,7 @@ import { FileText, Download, Trash2, Search, Loader2 } from 'lucide-react';
 import { ask, message } from '@tauri-apps/api/dialog';
 import { Invoice } from '../types/invoice';
 import { dbService } from '../services/db';
+import { invoiceService } from '../services/invoiceService';
 import { generateInvoicePDF } from '../services/pdfGenerator';
 
 export default function InvoiceHistory() {
@@ -33,7 +34,7 @@ export default function InvoiceHistory() {
   const loadInvoices = async () => {
     setIsLoading(true);
     try {
-      const allInvoices = await dbService.getAllInvoices();
+      const allInvoices = await invoiceService.getAllInvoices();
       setInvoices(allInvoices);
       setFilteredInvoices(allInvoices);
     } catch (error) {
@@ -78,7 +79,7 @@ export default function InvoiceHistory() {
 
     if (confirmed) {
       try {
-        await dbService.deleteInvoice(id);
+        await invoiceService.deleteInvoice(id);
         await loadInvoices();
         await message(`Invoice ${formattedInvoiceNumber} has been deleted successfully.`, {
           title: 'Deleted',
