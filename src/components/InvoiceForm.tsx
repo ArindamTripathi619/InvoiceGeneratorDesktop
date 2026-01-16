@@ -366,7 +366,7 @@ export default function InvoiceForm() {
         <button
           onClick={handleGeneratePDF}
           disabled={isGenerating}
-          className={`flex items - center gap - 2 px - 6 py - 3 rounded - lg transition - colors ${isGenerating
+          className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors ${isGenerating
             ? 'bg-gray-400 cursor-not-allowed'
             : 'bg-green-600 hover:bg-green-700 text-white'
             } `}
