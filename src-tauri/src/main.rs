@@ -4,7 +4,6 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::Manager;
 use std::fs;
 
 #[tauri::command]
@@ -181,7 +180,33 @@ fn download_gdrive_file(url: String, output_path: String) -> Result<(), String> 
         }
     }
 
-    Err("Download failed. (Check link permissions and 'invoices.db' existence)".to_string())
+    // FINAL FALLBACK: gdown (Python utility)
+    println!("Rust download failed, attempting gdown fallback for ID: {}", initial_id);
+    let mut args = vec![initial_id.as_str(), "-O", &output_path];
+    if is_folder {
+        args.push("--folder");
+    }
+
+    // Try python3 -m gdown
+    if let Ok(status) = std::process::Command::new("python3")
+        .args(&["-m", "gdown"])
+        .args(&args)
+        .status() {
+        if status.success() {
+            return Ok(());
+        }
+    }
+
+    // Try direct gdown command
+    if let Ok(status) = std::process::Command::new("gdown")
+        .args(&args)
+        .status() {
+        if status.success() {
+            return Ok(());
+        }
+    }
+
+    Err("All download methods failed. Please check your internet connection or the GDrive link.".to_string())
 }
 
 fn main() {

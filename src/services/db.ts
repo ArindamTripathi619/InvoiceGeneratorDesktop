@@ -1,6 +1,5 @@
 import Database from 'tauri-plugin-sql-api';
 import { createDir, exists, BaseDirectory } from '@tauri-apps/api/fs';
-import { Invoice, Customer } from '../types/invoice';
 import { backupService } from './backup';
 import { getCompanySettings, getAllCustomers } from '../utils/tauriStorage';
 

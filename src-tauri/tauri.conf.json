@@ -40,13 +40,7 @@
         ]
       },
       "path": {
-        "all": false,
-        "appDataDir": true,
-        "configDir": true,
-        "downloadDir": true,
-        "desktopDir": true,
-        "join": true,
-        "sep": true
+        "all": true
       },
       "http": {
         "all": false,
