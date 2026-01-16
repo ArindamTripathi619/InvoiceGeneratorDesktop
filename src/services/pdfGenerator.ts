@@ -1,3 +1,11 @@
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { save } from '@tauri-apps/api/dialog';
+import { writeBinaryFile, BaseDirectory } from '@tauri-apps/api/fs';
+import { Invoice, CompanySettings } from '../types/invoice';
+import { numberToWordsIndian } from '../utils/numberToWords';
+import { COMPANY_DETAILS } from '../utils/constants';
+
 // Module-level cache for images to avoid redundant processing/fetching
 const imageCache: Record<string, string> = {};
 
@@ -23,10 +31,10 @@ export async function generateInvoicePDF(
   let currentY = 8; // Start closer to top
 
   // Create letterhead
-  if (companyLogoDataUrl) {
+  if (logo) {
     try {
       // Add company logo - better aspect ratio for 832x1162 pixels
-      doc.addImage(companyLogoDataUrl, 'PNG', margin, currentY, 40, 35); // Increased height from 25 to 35
+      doc.addImage(logo, 'PNG', margin, currentY, 40, 35); // Increased height from 25 to 35
     } catch (error) {
       console.error('Error adding company logo:', error);
     }
@@ -383,10 +391,10 @@ export async function generateInvoicePDF(
 
   doc.setFontSize(8.5);
 
-  if (stampSignatureDataUrl) {
+  if (stamp) {
     try {
       // Move only the image right and make it wider, text stays centered on original position
-      doc.addImage(stampSignatureDataUrl, 'PNG', rightColumnX + 2, signatureY + 6, 55, 22); // Even wider signature
+      doc.addImage(stamp, 'PNG', rightColumnX + 2, signatureY + 6, 55, 22); // Even wider signature
       // APEX SOLAR - center aligned below stamp/signature, stays with original text alignment
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7.5);

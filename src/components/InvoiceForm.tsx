@@ -168,9 +168,11 @@ export default function InvoiceForm() {
           /**
            * BUSINESS LOGIC: The 'rate' is provided per Watt, but 'quantity' is in kWp.
            * We multiply by 1000 to convert kWp to Watts before calculating the amount.
+           * We use Math.round to handle precision at the per-item level.
            */
           const KWP_TO_WATT_FACTOR = 1000;
-          updated.amount = parseFloat((updated.rate * updated.quantity * KWP_TO_WATT_FACTOR).toFixed(2));
+          const amountPaise = Math.round(updated.rate * updated.quantity * KWP_TO_WATT_FACTOR * 100);
+          updated.amount = amountPaise / 100;
         }
         return updated;
       }
@@ -180,16 +182,19 @@ export default function InvoiceForm() {
   };
 
   const calculateTotals = () => {
-    const totalBasic = lineItems.reduce((sum, item) => sum + item.amount, 0);
-    const cgstAmount = (totalBasic * cgstPercentage) / 100;
-    const sgstAmount = (totalBasic * sgstPercentage) / 100;
-    const grandTotal = totalBasic + cgstAmount + sgstAmount;
+    // Perform all calculations in "paise" (integers) to avoid floating point drift
+    const toPaise = (num: number) => Math.round(num * 100);
+
+    const totalBasicPaise = lineItems.reduce((sum, item) => sum + toPaise(item.amount), 0);
+    const cgstPaise = Math.round((totalBasicPaise * cgstPercentage) / 100);
+    const sgstPaise = Math.round((totalBasicPaise * sgstPercentage) / 100);
+    const grandTotalPaise = totalBasicPaise + cgstPaise + sgstPaise;
 
     return {
-      totalBasicAmount: parseFloat(totalBasic.toFixed(2)),
-      cgstAmount: parseFloat(cgstAmount.toFixed(2)),
-      sgstAmount: parseFloat(sgstAmount.toFixed(2)),
-      grandTotal: parseFloat(grandTotal.toFixed(2)),
+      totalBasicAmount: totalBasicPaise / 100,
+      cgstAmount: cgstPaise / 100,
+      sgstAmount: sgstPaise / 100,
+      grandTotal: grandTotalPaise / 100,
     };
   };
 

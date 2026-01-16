@@ -12,6 +12,7 @@ export default function InvoiceHistory() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState<number>(10);
 
   useEffect(() => {
     loadInvoices();
@@ -132,10 +133,10 @@ export default function InvoiceHistory() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredInvoices.map((invoice) => (
+          {filteredInvoices.slice(0, visibleCount).map((invoice) => (
             <div
               key={invoice.id}
-              className="bg-gray-50 dark:bg-gray-700 dark:bg-gray-700 p-6 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors duration-200 hover:border-blue-300 transition-colors"
+              className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors duration-200 hover:border-blue-300 transition-colors"
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -212,6 +213,17 @@ export default function InvoiceHistory() {
               </div>
             </div>
           ))}
+
+          {filteredInvoices.length > visibleCount && (
+            <div className="pt-4 text-center">
+              <button
+                onClick={() => setVisibleCount(prev => prev + 10)}
+                className="px-8 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all duration-200 font-semibold"
+              >
+                Load More Invoices...
+              </button>
+            </div>
+          )}
         </div>
       )}
 

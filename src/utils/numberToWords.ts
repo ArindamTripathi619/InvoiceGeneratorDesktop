@@ -28,6 +28,20 @@ function convertThreeDigits(num: number): string {
   return result;
 }
 
+const denominations = [
+  { value: 100000000000, name: 'Kharab' },
+  { value: 1000000000, name: 'Arab' },
+  { value: 10000000, name: 'Crore' },
+  { value: 100000, name: 'Lakh' },
+  { value: 1000, name: 'Thousand' },
+];
+
+function convertBelowThousand(num: number): string {
+  if (num === 0) return '';
+  if (num < 100) return convertTwoDigits(num);
+  return convertThreeDigits(num);
+}
+
 export function numberToWordsIndian(num: number): string {
   if (num === 0) return 'Zero Rupees Only';
 
@@ -39,32 +53,20 @@ export function numberToWordsIndian(num: number): string {
   }
 
   let result = '';
+  let remainder = wholePart;
 
-  const crore = Math.floor(wholePart / 10000000);
-  let remainder = wholePart % 10000000;
-
-  const lakh = Math.floor(remainder / 100000);
-  remainder = remainder % 100000;
-
-  const thousand = Math.floor(remainder / 1000);
-  remainder = remainder % 1000;
-
-  const hundred = remainder;
-
-  if (crore > 0) {
-    result += convertTwoDigits(crore) + ' Crore ';
+  for (const denom of denominations) {
+    const unitValue = Math.floor(remainder / denom.value);
+    if (unitValue > 0) {
+      // For denominations like Crore, we might have more than 99 (e.g. 125 Crore)
+      // So we use convertBelowThousand or similar
+      result += (unitValue < 100 ? convertTwoDigits(unitValue) : convertThreeDigits(unitValue)) + ' ' + denom.name + ' ';
+      remainder %= denom.value;
+    }
   }
 
-  if (lakh > 0) {
-    result += convertTwoDigits(lakh) + ' Lakh ';
-  }
-
-  if (thousand > 0) {
-    result += convertTwoDigits(thousand) + ' Thousand ';
-  }
-
-  if (hundred > 0) {
-    result += convertThreeDigits(hundred) + ' ';
+  if (remainder > 0) {
+    result += convertBelowThousand(remainder) + ' ';
   }
 
   result = result.trim() + ' Rupees';

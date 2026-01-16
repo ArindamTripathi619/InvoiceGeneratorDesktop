@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Users, Plus, Trash2, CreditCard as Edit2, X, Save, Loader2 } from 'lucide-react';
 import { ask, message } from '@tauri-apps/api/dialog';
 import { Customer } from '../types/invoice';
-import { dbService } from '../services/db';
 import { customerService } from '../services/customerService';
 
 export default function CustomerManagement() {

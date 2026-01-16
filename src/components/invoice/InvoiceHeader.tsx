@@ -139,6 +139,7 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
                             value={invoiceNumber}
                             onChange={(e) => setInvoiceNumber(e.target.value)}
                             placeholder="022"
+                            title="Enter the sequential invoice number (e.g., 022). It will be prefixed with the financial year."
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-500 transition-colors duration-200 mt-1">
@@ -174,6 +175,7 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
                             value={workOrderReference}
                             onChange={(e) => setWorkOrderReference(e.target.value)}
                             placeholder="NIPL/RTS/002/35 Kwp/I & C/24-25/"
+                            title="Reference number from the client's work order."
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
                         />
                     </div>
