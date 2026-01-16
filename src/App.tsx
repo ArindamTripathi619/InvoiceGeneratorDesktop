@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
-import { FileText, Settings as SettingsIcon, Users, History, Moon, Sun } from 'lucide-react';
+import { FileText, Settings as SettingsIcon, Users, History, Moon, Sun, RefreshCw } from 'lucide-react';
 import InvoiceForm from './components/InvoiceForm';
 import Settings from './components/Settings';
 import InvoiceHistory from './components/InvoiceHistory';
 import CustomerManagement from './components/CustomerManagement';
 import SplashScreen from './components/SplashScreen';
+import { UpdateTab } from './components/UpdateTab';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import packageJson from '../package.json';
 import { COMPANY_DETAILS, FOOTER_DETAILS } from './utils/constants';
 import { dbService } from './services/db';
+import { updateService } from './services/updateService';
+import { message } from '@tauri-apps/api/dialog';
 
-type TabType = 'create' | 'history' | 'customers' | 'settings';
+type TabType = 'create' | 'history' | 'customers' | 'settings' | 'updates';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<TabType>('create');
@@ -26,6 +29,30 @@ function AppContent() {
       }
     };
     initDb();
+  }, []);
+
+  // Proactive Update Check on Launch
+  useEffect(() => {
+    const checkOnLaunch = async () => {
+      try {
+        const info = await updateService.checkUpdates();
+        if (info.hasUpdate) {
+          const proceed = await message(
+            `A new version (v${info.latestVersion}) is available! Would you like to view the update details?`,
+            { title: 'Update Available', type: 'info' }
+          );
+          // If the user clicks 'OK' (or similar based on dialog behavior), we could switch tabs
+          // But usually message() returns void or simple status. 
+          // For now, it just notifies.
+        }
+      } catch (e) {
+        console.error('Initial update check failed:', e);
+      }
+    };
+
+    // Small delay to allow splash/db to settle
+    const timer = setTimeout(checkOnLaunch, 5000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Check if splash has been shown in this session
@@ -51,6 +78,7 @@ function AppContent() {
     { id: 'history' as TabType, label: 'Invoice History', icon: History },
     { id: 'customers' as TabType, label: 'Customers', icon: Users },
     { id: 'settings' as TabType, label: 'Settings', icon: SettingsIcon },
+    { id: 'updates' as TabType, label: 'Updates', icon: RefreshCw },
   ];
 
   return (
@@ -128,6 +156,7 @@ function AppContent() {
         {activeTab === 'history' && <InvoiceHistory />}
         {activeTab === 'customers' && <CustomerManagement />}
         {activeTab === 'settings' && <Settings />}
+        {activeTab === 'updates' && <UpdateTab />}
       </main>
 
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-4 sm:mt-8 md:mt-12 transition-colors duration-200">
