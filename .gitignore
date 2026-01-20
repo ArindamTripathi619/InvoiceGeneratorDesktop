@@ -60,3 +60,7 @@ CHECKSUMS.txt
 
 # Docs
 docs/
+
+# IDEs
+.agent/
+.github/copilot-instructions.md
