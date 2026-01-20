@@ -5,9 +5,35 @@
 )]
 
 use std::fs;
+use std::path::{Path, PathBuf};
+
+/// Validates that a path is within the allowed AppData scope to prevent path traversal.
+fn ensure_path_in_scope(app_handle: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
+    let app_data_dir = app_handle.path_resolver().app_data_dir()
+        .ok_or_else(|| "Failed to resolve app data dir".to_string())?;
+    
+    let target_path = Path::new(path);
+    
+    // If it's an absolute path, it must start with app_data_dir
+    if target_path.is_absolute() {
+        if target_path.starts_with(&app_data_dir) {
+            return Ok(target_path.to_path_buf());
+        }
+        return Err("Access denied: Path is outside of allowed scope".to_string());
+    }
+    
+    // If it's relative, join it with app_data_dir and canonicalize to check for .. escapes
+    let joined_path = app_data_dir.join(target_path);
+    // Note: Simple check for ".." to prevent traversal in relative paths
+    if path.contains("..") {
+        return Err("Access denied: Path contains invalid characters".to_string());
+    }
+    
+    Ok(joined_path)
+}
 
 #[tauri::command]
-fn export_database(app_handle: tauri::AppHandle, target_path: String) -> Result<(), String> {
+async fn export_database(app_handle: tauri::AppHandle, target_path: String) -> Result<(), String> {
     let config_dir = app_handle.path_resolver().app_config_dir().ok_or("Failed to resolve app config dir")?;
     let data_dir = app_handle.path_resolver().app_data_dir().ok_or("Failed to resolve app data dir")?;
     
@@ -22,12 +48,13 @@ fn export_database(app_handle: tauri::AppHandle, target_path: String) -> Result<
         return Err("Database file not found".to_string());
     };
 
+    // Note: We don't use ensure_path_in_scope here because target_path comes from a system dialog (Safe)
     fs::copy(&db_path, &target_path).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-fn import_database(app_handle: tauri::AppHandle, source_path: String) -> Result<(), String> {
+async fn import_database(app_handle: tauri::AppHandle, source_path: String) -> Result<(), String> {
     let config_dir = app_handle.path_resolver().app_config_dir().ok_or("Failed to resolve app config dir")?;
     let db_path = config_dir.join("invoices.db");
     
@@ -40,16 +67,25 @@ fn import_database(app_handle: tauri::AppHandle, source_path: String) -> Result<
 }
 
 #[tauri::command]
-fn save_file_content(path: String, content: Vec<u8>) -> Result<(), String> {
+async fn save_file_content(app_handle: tauri::AppHandle, path: String, content: Vec<u8>) -> Result<(), String> {
+    let safe_path = ensure_path_in_scope(&app_handle, &path)?;
+    
+    // Ensure parent directory exists
+    if let Some(parent) = safe_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
     use std::io::Write;
-    let mut file = fs::File::create(path).map_err(|e| e.to_string())?;
+    let mut file = fs::File::create(safe_path).map_err(|e| e.to_string())?;
     file.write_all(&content).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-fn download_gdrive_file(url: String, output_path: String) -> Result<(), String> {
-    let client = reqwest::blocking::Client::builder()
+async fn download_gdrive_file(app_handle: tauri::AppHandle, url: String, output_path: String) -> Result<(), String> {
+    let safe_output_path = ensure_path_in_scope(&app_handle, &output_path)?;
+    
+    let client = reqwest::Client::builder()
         .cookie_store(true)
         .user_agent("Mozilla/5.0")
         .build()
@@ -65,18 +101,22 @@ fn download_gdrive_file(url: String, output_path: String) -> Result<(), String> 
         if let Some(caps) = regex::Regex::new(r"id=([a-zA-Z0-9_-]+)").unwrap().captures(s) {
             return Some(caps.get(1).unwrap().as_str().to_string());
         }
-        Some(s.to_string())
+        // Direct ID validation
+        if regex::Regex::new(r"^[a-zA-Z0-9_-]{10,50}$").unwrap().is_match(s) {
+            return Some(s.to_string());
+        }
+        None
     };
 
-    let initial_id = extract_id(&url).ok_or("Invalid URL")?;
+    let initial_id = extract_id(&url).ok_or("Invalid Google Drive URL or ID")?;
     let is_folder = url.contains("/folders/");
 
     let mut final_file_id = None;
 
     if is_folder {
         let folder_url = format!("https://drive.google.com/embeddedfolderview?id={}#list", initial_id);
-        if let Ok(resp) = client.get(&folder_url).send() {
-             if let Ok(text) = resp.text() {
+        if let Ok(resp) = client.get(&folder_url).send().await {
+             if let Ok(text) = resp.text().await {
                  // Try JSON pattern first
                  let re_json = regex::Regex::new(r#"\["([a-zA-Z0-9_-]+)","invoices\.db""#).unwrap();
                  if let Some(caps) = re_json.captures(&text) {
@@ -99,28 +139,27 @@ fn download_gdrive_file(url: String, output_path: String) -> Result<(), String> 
 
     if try_direct_file {
         let download_url = format!("https://drive.google.com/uc?id={}&export=download", file_id_to_try);
-        if let Ok(mut response) = client.get(&download_url).send() {
-             let is_html = response.headers().get("content-type").map(|v| v.to_str().unwrap_or("")).unwrap_or("").contains("text/html");
+        if let Ok(response) = client.get(&download_url).send().await {
+             let headers = response.headers().clone();
+             let is_html = headers.get("content-type").map(|v| v.to_str().unwrap_or("")).unwrap_or("").contains("text/html");
              if is_html {
-                 let text = response.text().unwrap_or_default();
+                 let text = response.text().await.unwrap_or_default();
                  if text.contains("confirm=") {
                      let re = regex::Regex::new(r"confirm=([a-zA-Z0-9_-]+)").unwrap();
                      if let Some(caps) = re.captures(&text) {
                          let code = caps.get(1).unwrap().as_str();
                          let confirm_url = format!("{}&confirm={}", download_url, code);
-                         if let Ok(mut resp2) = client.get(&confirm_url).send() {
-                             let mut file = std::fs::File::create(&output_path).map_err(|e| e.to_string())?;
-                             if std::io::copy(&mut resp2, &mut file).is_ok() {
-                                 return Ok(());
-                             }
+                         if let Ok(resp2) = client.get(&confirm_url).send().await {
+                              let bytes = resp2.bytes().await.map_err(|e| e.to_string())?;
+                              fs::write(&safe_output_path, bytes).map_err(|e| e.to_string())?;
+                              return Ok(());
                          }
                      }
                  }
              } else {
-                 let mut file = std::fs::File::create(&output_path).map_err(|e| e.to_string())?;
-                 if std::io::copy(&mut response, &mut file).is_ok() {
-                     return Ok(());
-                 }
+                  let bytes = response.bytes().await.map_err(|e| e.to_string())?;
+                  fs::write(&safe_output_path, bytes).map_err(|e| e.to_string())?;
+                  return Ok(());
              }
         }
     }
@@ -128,19 +167,19 @@ fn download_gdrive_file(url: String, output_path: String) -> Result<(), String> 
     // Fallback: Zip Download
     if is_folder {
         let download_url = format!("https://drive.google.com/uc?id={}&export=download", initial_id);
-        if let Ok(mut response) = client.get(&download_url).send() {
+        if let Ok(mut response) = client.get(&download_url).send().await {
              let is_html = response.headers().get("content-type").map(|v| v.to_str().unwrap_or("")).unwrap_or("").contains("text/html");
              if is_html {
-                 let text = response.text().unwrap_or_default();
+                 let text = response.text().await.unwrap_or_default();
                  if text.contains("confirm=") {
                      let re = regex::Regex::new(r"confirm=([a-zA-Z0-9_-]+)").unwrap();
                      if let Some(caps) = re.captures(&text) {
                          let code = caps.get(1).unwrap().as_str();
                          let confirm_url = format!("{}&confirm={}", download_url, code);
-                         if let Ok(resp2) = client.get(&confirm_url).send() {
-                             response = resp2;
+                         if let Ok(resp2) = client.get(&confirm_url).send().await {
+                              response = resp2;
                          } else {
-                             return Err("Zip Confirm Request failed".to_string());
+                              return Err("Zip Confirm Request failed".to_string());
                          }
                      } else {
                         return Err("Folder Zip failed: Virus scan warning found but no confirm code.".to_string());
@@ -150,12 +189,10 @@ fn download_gdrive_file(url: String, output_path: String) -> Result<(), String> 
                  }
              }
              
-             let zip_path = format!("{}.zip", output_path);
+             let zip_path = safe_output_path.with_extension("zip");
              {
-                 let mut file = std::fs::File::create(&zip_path).map_err(|e| e.to_string())?;
-                 if let Err(e) = std::io::copy(&mut response, &mut file) {
-                      return Err(format!("Failed to save zip: {}", e));
-                 }
+                 let bytes = response.bytes().await.map_err(|e| e.to_string())?;
+                 fs::write(&zip_path, bytes).map_err(|e| e.to_string())?;
              }
 
              let file = std::fs::File::open(&zip_path).map_err(|e| e.to_string())?;
@@ -165,7 +202,7 @@ fn download_gdrive_file(url: String, output_path: String) -> Result<(), String> 
              for i in 0..archive.len() {
                  let mut file = archive.by_index(i).unwrap();
                  if file.name().ends_with("invoices.db") {
-                     let mut outfile = std::fs::File::create(&output_path).map_err(|e| e.to_string())?;
+                     let mut outfile = std::fs::File::create(&safe_output_path).map_err(|e| e.to_string())?;
                      std::io::copy(&mut file, &mut outfile).map_err(|e| e.to_string())?;
                      found = true;
                      break;
@@ -182,7 +219,10 @@ fn download_gdrive_file(url: String, output_path: String) -> Result<(), String> 
 
     // FINAL FALLBACK: gdown (Python utility)
     println!("Rust download failed, attempting gdown fallback for ID: {}", initial_id);
-    let mut args = vec![initial_id.as_str(), "-O", &output_path];
+    let mut args = vec![initial_id.as_str(), "-O"];
+    let output_str = safe_output_path.to_string_lossy();
+    args.push(&output_str);
+    
     if is_folder {
         args.push("--folder");
     }

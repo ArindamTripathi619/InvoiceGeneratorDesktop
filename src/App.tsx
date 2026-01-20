@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, Settings as SettingsIcon, Users, History, Moon, Sun, RefreshCw } from 'lucide-react';
-import InvoiceForm from './components/InvoiceForm';
+import { InvoiceForm } from './components/InvoiceForm';
 import Settings from './components/Settings';
 import InvoiceHistory from './components/InvoiceHistory';
 import CustomerManagement from './components/CustomerManagement';

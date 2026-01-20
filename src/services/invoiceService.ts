@@ -17,6 +17,7 @@ export class InvoiceService {
     public async saveInvoice(invoice: Invoice): Promise<void> {
         const db = await dbService.getDb();
 
+        // 1. Save main invoice record
         await db.execute(
             `INSERT INTO invoices(invoice_number, financial_year, customer_id, invoice_date, grand_total, status, work_order_reference, work_order_date, json_data)
              VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -33,19 +34,63 @@ export class InvoiceService {
                 'GENERATED',
                 invoice.workOrderReference || '',
                 invoice.workOrderDate || '',
-                JSON.stringify({ ...invoice, id: invoice.invoiceNumber })
+                JSON.stringify({ ...invoice, id: invoice.invoiceNumber }) // Keep for backward compatibility/backup
             ]
         );
+
+        // 2. Save line items relationally
+        // First clear existing items for this invoice number (transactional-ish)
+        await db.execute('DELETE FROM invoice_items WHERE invoice_number = $1', [invoice.invoiceNumber]);
+
+        for (const item of invoice.lineItems) {
+            await db.execute(
+                `INSERT INTO invoice_items(id, invoice_number, serial_number, description, hsn_sac_code, rate, quantity, unit, amount)
+                 VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                [item.id, invoice.invoiceNumber, item.serialNumber, item.description, item.hsnSacCode, item.rate, item.quantity, item.unit, item.amount]
+            );
+        }
+
         backupService.notifyChange();
     }
 
     public async getAllInvoices(): Promise<Invoice[]> {
         const db = await dbService.getDb();
         const rows = await db.select<any[]>('SELECT * FROM invoices ORDER BY created_at DESC');
-        return rows.map(row => {
-            const invoice = JSON.parse(row.json_data);
-            return { ...invoice, id: row.invoice_number };
-        });
+
+        const invoices: Invoice[] = [];
+
+        for (const row of rows) {
+            // First try to load from relational table
+            const items = await db.select<any[]>('SELECT * FROM invoice_items WHERE invoice_number = $1 ORDER BY serial_number', [row.invoice_number]);
+
+            let invoice: Invoice;
+            if (items.length > 0) {
+                // Construct from relational data
+                const fallbackData = JSON.parse(row.json_data);
+                invoice = {
+                    ...fallbackData,
+                    invoiceNumber: row.invoice_number,
+                    id: row.invoice_number,
+                    lineItems: items.map(p => ({
+                        id: p.id,
+                        serialNumber: p.serial_number,
+                        description: p.description,
+                        hsnSacCode: p.hsn_sac_code,
+                        rate: p.rate,
+                        quantity: p.quantity,
+                        unit: p.unit,
+                        amount: p.amount
+                    }))
+                };
+            } else {
+                // Fallback to JSON blob if no relational items found (shouldn't happen after migration)
+                invoice = JSON.parse(row.json_data);
+                invoice.id = row.invoice_number;
+            }
+            invoices.push(invoice);
+        }
+
+        return invoices;
     }
 
     public async deleteInvoice(invoiceNumber: string): Promise<void> {

@@ -342,6 +342,19 @@ export default function Settings() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">
+                  Proprietor / Authorized Signatory Name
+                </label>
+                <input
+                  type="text"
+                  value={settings.proprietorName || ''}
+                  onChange={(e) => setSettings({ ...settings, proprietorName: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-200"
+                  placeholder="e.g. PARTHA TRIPATHI"
+                />
+              </div>
+
               <button
                 onClick={handleSaveSettings}
                 disabled={isSaving}

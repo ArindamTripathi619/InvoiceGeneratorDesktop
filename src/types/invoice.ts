@@ -47,5 +47,6 @@ export interface CompanySettings {
   ifscCode: string;
   accountNumber: string;
   gstNumber: string;
+  proprietorName?: string;
   stampSignatureUrl?: string;
 }

@@ -73,11 +73,27 @@ export class DatabaseService {
                 invoice_date TEXT,
                 grand_total REAL,
                 status TEXT, -- 'DRAFT', 'GENERATED'
-                json_data TEXT, --Full JSON blob for LineItems and nested data
+                json_data TEXT, -- Keep for legacy/backup during migration
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 work_order_reference TEXT,
                 work_order_date TEXT,
                 FOREIGN KEY(customer_id) REFERENCES customers(id)
+            );
+        `);
+
+        // Invoice Items Table (Relational)
+        await this.db.execute(`
+            CREATE TABLE IF NOT EXISTS invoice_items(
+                id TEXT PRIMARY KEY,
+                invoice_number TEXT,
+                serial_number INTEGER,
+                description TEXT,
+                hsn_sac_code TEXT,
+                rate REAL,
+                quantity REAL,
+                unit TEXT,
+                amount REAL,
+                FOREIGN KEY(invoice_number) REFERENCES invoices(invoice_number) ON DELETE CASCADE
             );
         `);
     }
@@ -85,32 +101,54 @@ export class DatabaseService {
     private async migrateFromJsonIfNeeded(): Promise<void> {
         if (!this.db) return;
 
-        // Check if migration flag exists
+        // 1. Initial Migration (Files to DB)
         const migrated = await this.db.select<any[]>('SELECT value FROM settings WHERE key = "migration_complete"');
-        if (migrated.length > 0) return;
-
-        console.log('Starting migration from JSON storage...');
-
-        try {
-            // Import services here to avoid circular dependency
-            const { customerService } = await import('./customerService');
-
-            // Migrate Customers
-            const customers = await getAllCustomers();
-            for (const customer of customers) {
-                await customerService.upsertCustomer(customer);
+        if (migrated.length === 0) {
+            console.log('Starting migration from legacy storage...');
+            try {
+                const { customerService } = await import('./customerService');
+                const customers = await getAllCustomers();
+                for (const customer of customers) {
+                    await customerService.upsertCustomer(customer);
+                }
+                const companySettings = await getCompanySettings();
+                await this.saveSetting('company_settings', JSON.stringify(companySettings));
+                await this.db.execute('INSERT INTO settings (key, value) VALUES (?, ?)', ['migration_complete', 'true']);
+                console.log('Initial migration completed.');
+            } catch (error) {
+                console.error('Initial migration failed:', error);
             }
+        }
 
-            // Migrate Settings (e.g. Company Settings)
-            const companySettings = await getCompanySettings();
-            await this.saveSetting('company_settings', JSON.stringify(companySettings));
-
-            // Mark migration as complete
-            await this.db.execute('INSERT INTO settings (key, value) VALUES (?, ?)', ['migration_complete', 'true']);
-
-            console.log('Migration completed successfully.');
-        } catch (error) {
-            console.error('Migration failed:', error);
+        // 2. Relational Migration (JSON Blobs to invoice_items table)
+        const relationalMigrated = await this.db.select<any[]>('SELECT value FROM settings WHERE key = "relational_migration_complete"');
+        if (relationalMigrated.length === 0) {
+            console.log('Starting relational migration (JSON to Table)...');
+            try {
+                const invoices = await this.db.select<any[]>('SELECT invoice_number, json_data FROM invoices');
+                for (const inv of invoices) {
+                    if (inv.json_data) {
+                        const data = JSON.parse(inv.json_data);
+                        if (data.lineItems && Array.isArray(data.lineItems)) {
+                            for (const item of data.lineItems) {
+                                // Check if item already exists to avoid duplicates if migration partially ran
+                                const existing = await this.db.select<any[]>('SELECT id FROM invoice_items WHERE id = $1', [item.id]);
+                                if (existing.length === 0) {
+                                    await this.db.execute(
+                                        `INSERT INTO invoice_items(id, invoice_number, serial_number, description, hsn_sac_code, rate, quantity, unit, amount)
+                                         VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                                        [item.id, inv.invoice_number, item.serialNumber, item.description, item.hsnSacCode, item.rate, item.quantity, item.unit, item.amount]
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                await this.db.execute('INSERT INTO settings (key, value) VALUES (?, ?)', ['relational_migration_complete', 'true']);
+                console.log('Relational migration completed.');
+            } catch (error) {
+                console.error('Relational migration failed:', error);
+            }
         }
     }
 

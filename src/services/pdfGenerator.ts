@@ -333,7 +333,8 @@ export async function generateInvoicePDF(
   currentY = (doc as any).lastAutoTable.finalY + 3; // Reduced spacing
 
   const totalTaxAmount = invoice.cgstAmount + invoice.sgstAmount;
-  const totalTaxInWords = numberToWordsIndian(totalTaxAmount);
+  // Use integer math for words if possible, or round carefully
+  const totalTaxInWords = numberToWordsIndian(parseFloat(totalTaxAmount.toFixed(2)));
   doc.setFont('helvetica', 'bold'); // Make it bold
   doc.setFontSize(9);
   doc.setTextColor(51, 51, 51); // Dark gray
@@ -384,10 +385,11 @@ export async function generateInvoicePDF(
   doc.setFontSize(8.5);
   doc.text('PROPRIETOR', signatureCenterX, signatureY, { align: 'center' });
 
-  // (PARTHA TRIPATHI) - center aligned below PROPRIETOR
+  // (NAME) - center aligned below PROPRIETOR
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.text('(PARTHA TRIPATHI)', signatureCenterX, signatureY + 4, { align: 'center' });
+  const proprietorName = companySettings.proprietorName ? `(${companySettings.proprietorName.toUpperCase()})` : '(AUTHORIZED SIGNATORY)';
+  doc.text(proprietorName, signatureCenterX, signatureY + 4, { align: 'center' });
 
   doc.setFontSize(8.5);
 

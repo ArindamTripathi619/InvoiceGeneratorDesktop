@@ -1,221 +1,59 @@
-import { useState, useEffect } from 'react';
-import { Download, Save } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Download, RotateCcw } from 'lucide-react';
 import { message } from '@tauri-apps/api/dialog';
-import { Invoice, LineItem, Customer } from '../types/invoice';
-import { numberToWordsIndian, getCurrentFinancialYear } from '../utils/numberToWords';
 import { generateInvoicePDF } from '../services/pdfGenerator';
-import { InvoiceHeader } from './invoice/InvoiceHeader';
+import { dbService } from '../services/db';
+import { invoiceService } from '../services/invoiceService';
+import { InvoiceHeader, InvoiceFormControl } from './invoice/InvoiceHeader';
 import { LineItemsTable } from './invoice/LineItemsTable';
 import { TaxSummary } from './invoice/TaxSummary';
-import { dbService } from '../services/db';
-import { customerService } from '../services/customerService';
-import { invoiceService } from '../services/invoiceService';
+import { useInvoiceForm } from '../hooks/useInvoiceForm';
 
-export default function InvoiceForm() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+import { numberToWordsIndian } from '../utils/numberToWords';
 
-  const [invoiceNumber, setInvoiceNumber] = useState<string>('');
-  const [financialYear] = useState<string>(getCurrentFinancialYear());
-  const [invoiceDate, setInvoiceDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [workOrderReference, setWorkOrderReference] = useState<string>('');
-  const [workOrderDate, setWorkOrderDate] = useState<string>('');
+export const InvoiceForm: React.FC = () => {
+  const { state, actions } = useInvoiceForm();
+  const {
+    customers,
+    selectedCustomerId,
+    invoiceNumber,
+    financialYear,
+    invoiceDate,
+    workOrderReference,
+    workOrderDate,
+    customer,
+    lineItems,
+    cgstPercentage,
+    sgstPercentage,
+    isGenerating,
+    totals,
+  } = state;
 
-  const [companyName, setCompanyName] = useState<string>('');
-  const [addressLine1, setAddressLine1] = useState<string>('');
-  const [addressLine2, setAddressLine2] = useState<string>('');
-  const [addressLine3, setAddressLine3] = useState<string>('');
-  const [city, setCity] = useState<string>('');
-  const [state, setState] = useState<string>('');
-  const [pincode, setPincode] = useState<string>('');
-  const [gstNumber, setGstNumber] = useState<string>('');
-  const [panNumber, setPanNumber] = useState<string>('');
+  const {
+    setInvoiceNumber,
+    setInvoiceDate,
+    setWorkOrderReference,
+    setWorkOrderDate,
+    setCgstPercentage,
+    setSgstPercentage,
+    setIsGenerating,
+    handleCustomerSelect,
+    updateCustomerField,
+    addLineItem,
+    removeLineItem,
+    updateLineItem,
+    handleAutoSave,
+    handleReset,
+    validateForm,
+  } = actions;
 
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    {
-      id: '1',
-      serialNumber: 1,
-      description: '',
-      hsnSacCode: '',
-      rate: 0,
-      quantity: 0,
-      unit: 'kWp',
-      amount: 0,
-    },
-  ]);
-
-  const [cgstPercentage, setCgstPercentage] = useState<number>(9);
-  const [sgstPercentage, setSgstPercentage] = useState<number>(9);
-
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-
+  // Auto-save debounced
   useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      const customerList = await customerService.getAllCustomers();
-      setCustomers(customerList);
-
-      const draft = await invoiceService.getDraftInvoice();
-      if (draft) {
-        if (draft.invoiceNumber) setInvoiceNumber(draft.invoiceNumber);
-        if (draft.invoiceDate) setInvoiceDate(draft.invoiceDate);
-        if (draft.workOrderReference) setWorkOrderReference(draft.workOrderReference);
-        if (draft.workOrderDate) setWorkOrderDate(draft.workOrderDate);
-        if (draft.customer) {
-          setCompanyName(draft.customer.companyName || '');
-          setAddressLine1(draft.customer.addressLine1 || '');
-          setAddressLine2(draft.customer.addressLine2 || '');
-          setAddressLine3(draft.customer.addressLine3 || '');
-          setCity(draft.customer.city || '');
-          setState(draft.customer.state || '');
-          setPincode(draft.customer.pincode || '');
-          setGstNumber(draft.customer.gstNumber || '');
-          setPanNumber(draft.customer.panNumber || '');
-        }
-        if (draft.lineItems && draft.lineItems.length > 0) {
-          setLineItems(draft.lineItems);
-        }
-        if (draft.cgstPercentage !== undefined) setCgstPercentage(draft.cgstPercentage);
-        if (draft.sgstPercentage !== undefined) setSgstPercentage(draft.sgstPercentage);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    }
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
+    const timer = setTimeout(() => {
       handleAutoSave();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [invoiceNumber, invoiceDate, workOrderReference, workOrderDate, companyName, addressLine1, addressLine2, addressLine3, city, state, pincode, gstNumber, panNumber, lineItems, cgstPercentage, sgstPercentage]);
-
-  const handleAutoSave = async () => {
-    const draft: Partial<Invoice> = {
-      invoiceNumber,
-      financialYear,
-      invoiceDate,
-      workOrderReference,
-      workOrderDate,
-      customer: {
-        companyName,
-        addressLine1,
-        addressLine2,
-        addressLine3,
-        city,
-        state,
-        pincode,
-        gstNumber,
-        panNumber,
-      },
-      lineItems,
-      cgstPercentage,
-      sgstPercentage,
-    };
-    await invoiceService.saveDraftInvoice(draft);
-  };
-
-  const handleCustomerSelect = (customerId: string) => {
-    setSelectedCustomerId(customerId);
-    if (customerId) {
-      const customer = customers.find(c => c.id === customerId);
-      if (customer) {
-        setCompanyName(customer.companyName || '');
-        setAddressLine1(customer.addressLine1 || '');
-        setAddressLine2(customer.addressLine2 || '');
-        setAddressLine3(customer.addressLine3 || '');
-        setCity(customer.city || '');
-        setState(customer.state || '');
-        setPincode(customer.pincode || '');
-        setGstNumber(customer.gstNumber || '');
-        setPanNumber(customer.panNumber || '');
-      }
-    }
-  };
-
-  const addLineItem = () => {
-    const newItem: LineItem = {
-      id: Date.now().toString(),
-      serialNumber: lineItems.length + 1,
-      description: '',
-      hsnSacCode: '',
-      rate: 0,
-      quantity: 0,
-      unit: 'kWp',
-      amount: 0,
-    };
-    setLineItems([...lineItems, newItem]);
-  };
-
-  const removeLineItem = (id: string) => {
-    if (lineItems.length === 1) return;
-    const updatedItems = lineItems.filter(item => item.id !== id);
-    updatedItems.forEach((item, index) => {
-      item.serialNumber = index + 1;
-    });
-    setLineItems(updatedItems);
-  };
-
-  const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
-    const updatedItems = lineItems.map(item => {
-      if (item.id === id) {
-        const updated = { ...item, [field]: value };
-        if (field === 'rate' || field === 'quantity') {
-          /**
-           * BUSINESS LOGIC: The 'rate' is provided per Watt, but 'quantity' is in kWp.
-           * We multiply by 1000 to convert kWp to Watts before calculating the amount.
-           * We use Math.round to handle precision at the per-item level.
-           */
-          const KWP_TO_WATT_FACTOR = 1000;
-          const amountPaise = Math.round(updated.rate * updated.quantity * KWP_TO_WATT_FACTOR * 100);
-          updated.amount = amountPaise / 100;
-        }
-        return updated;
-      }
-      return item;
-    });
-    setLineItems(updatedItems);
-  };
-
-  const calculateTotals = () => {
-    // Perform all calculations in "paise" (integers) to avoid floating point drift
-    const toPaise = (num: number) => Math.round(num * 100);
-
-    const totalBasicPaise = lineItems.reduce((sum, item) => sum + toPaise(item.amount), 0);
-    const cgstPaise = Math.round((totalBasicPaise * cgstPercentage) / 100);
-    const sgstPaise = Math.round((totalBasicPaise * sgstPercentage) / 100);
-    const grandTotalPaise = totalBasicPaise + cgstPaise + sgstPaise;
-
-    return {
-      totalBasicAmount: totalBasicPaise / 100,
-      cgstAmount: cgstPaise / 100,
-      sgstAmount: sgstPaise / 100,
-      grandTotal: grandTotalPaise / 100,
-    };
-  };
-
-  const totals = calculateTotals();
-
-  const validateForm = (): string | null => {
-    if (!invoiceNumber.trim()) return 'Please enter invoice number';
-    if (!/^\d+$/.test(invoiceNumber.trim())) return 'Invoice number should contain only digits (e.g., 022)';
-    if (!invoiceDate) return 'Please select invoice date';
-    if (!companyName.trim()) return 'Please enter customer company name';
-    if (!addressLine1.trim()) return 'Please enter customer address';
-    if (lineItems.length === 0) return 'Please add at least one line item';
-
-    for (const item of lineItems) {
-      if (!item.description.trim()) return `Please enter description for item ${item.serialNumber}`;
-      if (item.rate <= 0) return `Please enter valid rate for item ${item.serialNumber}`;
-      if (item.quantity <= 0) return `Please enter valid quantity for item ${item.serialNumber}`;
-    }
-
-    return null;
-  };
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [handleAutoSave]);
 
   const handleGeneratePDF = async () => {
     const error = validateForm();
@@ -225,138 +63,102 @@ export default function InvoiceForm() {
     }
 
     setIsGenerating(true);
-
     try {
-      const invoice: Invoice = {
-        invoiceNumber,
-        financialYear,
-        invoiceDate,
-        workOrderReference,
-        workOrderDate,
-        customer: {
-          id: selectedCustomerId || undefined,
-          companyName,
-          addressLine1,
-          addressLine2,
-          addressLine3,
-          city,
-          state,
-          pincode,
-          gstNumber,
-          panNumber,
-        },
-        lineItems,
-        totalBasicAmount: totals.totalBasicAmount,
-        cgstPercentage,
-        cgstAmount: totals.cgstAmount,
-        sgstPercentage,
-        sgstAmount: totals.sgstAmount,
-        grandTotal: totals.grandTotal,
-        amountInWords: numberToWordsIndian(totals.grandTotal),
-      };
-
       const companySettings = await dbService.getCompanySettings();
+      if (!companySettings) {
+        await message('Please configure company settings first!', {
+          title: 'Settings Missing',
+          type: 'error',
+        });
+        return;
+      }
+
       const stampSignature = await dbService.getStampSignature();
       const companyLogo = await dbService.getCompanyLogo();
 
-      await generateInvoicePDF(invoice, companySettings, stampSignature || undefined, companyLogo || undefined);
+      const invoice = {
+        invoiceNumber,
+        financialYear,
+        invoiceDate,
+        customer,
+        lineItems,
+        totalBasicAmount: totals.totalBasicAmount,
+        cgstPercentage,
+        sgstPercentage,
+        cgstAmount: totals.cgstAmount,
+        sgstAmount: totals.sgstAmount,
+        grandTotal: totals.grandTotal,
+        amountInWords: numberToWordsIndian(totals.grandTotal),
+        workOrderReference,
+        workOrderDate,
+      };
 
-      await invoiceService.saveInvoice(invoice);
-      await invoiceService.clearDraftInvoice();
-
-      await message('Invoice generated successfully!', { title: 'Success', type: 'info' });
-
-      handleReset();
+      await generateInvoicePDF(
+        invoice as any,
+        companySettings,
+        stampSignature || undefined,
+        companyLogo || undefined
+      );
+      await invoiceService.saveInvoice(invoice as any);
+      await message('Invoice generated and saved successfully!', 'Success');
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      await message('Error generating PDF. Please try again.', { title: 'Error', type: 'error' });
+      console.error('PDF Generation Error:', error);
+      await message('Failed to generate PDF. Please check console for details.', {
+        title: 'Error',
+        type: 'error',
+      });
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleReset = () => {
-    setInvoiceNumber('');
-    setInvoiceDate(new Date().toISOString().split('T')[0]);
-    setWorkOrderReference('');
-    setWorkOrderDate('');
-    setSelectedCustomerId('');
-    setCompanyName('');
-    setAddressLine1('');
-    setAddressLine2('');
-    setAddressLine3('');
-    setCity('');
-    setState('');
-    setPincode('');
-    setGstNumber('');
-    setPanNumber('');
-    setLineItems([
-      {
-        id: '1',
-        serialNumber: 1,
-        description: '',
-        hsnSacCode: '',
-        rate: 0,
-        quantity: 0,
-        unit: 'kWp',
-        amount: 0,
-      },
-    ]);
-    setCgstPercentage(9);
-    setSgstPercentage(9);
-    invoiceService.clearDraftInvoice();
+  const headerFormControl: InvoiceFormControl = {
+    invoiceNumber,
+    setInvoiceNumber,
+    financialYear,
+    invoiceDate,
+    setInvoiceDate,
+    workOrderReference,
+    setWorkOrderReference,
+    workOrderDate,
+    setWorkOrderDate,
+    customers,
+    selectedCustomerId,
+    onCustomerSelect: handleCustomerSelect,
+    customer,
+    updateCustomerField
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 transition-colors duration-200">Create Invoice</h1>
-        <p className="text-gray-600 dark:text-gray-400 transition-colors duration-200">Generate professional invoices for Apex Solar</p>
+    <div className="max-w-5xl mx-auto p-4 md:p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
+            Create Invoice
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200">
+            Enter details to generate a professional GST invoice
+          </p>
+        </div>
+        <button
+          onClick={handleReset}
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
+        >
+          <RotateCcw size={20} />
+          Reset Form
+        </button>
       </div>
 
-      <InvoiceHeader
-        invoiceNumber={invoiceNumber}
-        setInvoiceNumber={setInvoiceNumber}
-        financialYear={financialYear}
-        invoiceDate={invoiceDate}
-        setInvoiceDate={setInvoiceDate}
-        workOrderReference={workOrderReference}
-        setWorkOrderReference={setWorkOrderReference}
-        workOrderDate={workOrderDate}
-        setWorkOrderDate={setWorkOrderDate}
-        customers={customers}
-        selectedCustomerId={selectedCustomerId}
-        onCustomerSelect={handleCustomerSelect}
-        companyName={companyName}
-        setCompanyName={setCompanyName}
-        addressLine1={addressLine1}
-        setAddressLine1={setAddressLine1}
-        addressLine2={addressLine2}
-        setAddressLine2={setAddressLine2}
-        addressLine3={addressLine3}
-        setAddressLine3={setAddressLine3}
-        city={city}
-        setCity={setCity}
-        state={state}
-        setState={setState}
-        pincode={pincode}
-        setPincode={setPincode}
-        gstNumber={gstNumber}
-        setGstNumber={setGstNumber}
-        panNumber={panNumber}
-        setPanNumber={setPanNumber}
-      />
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <InvoiceHeader form={headerFormControl} />
 
-      <div className="mt-8">
         <LineItemsTable
           lineItems={lineItems}
           onAdd={addLineItem}
           onRemove={removeLineItem}
           onUpdate={updateLineItem}
         />
-      </div>
 
-      <div className="mt-8">
         <TaxSummary
           cgstPercentage={cgstPercentage}
           sgstPercentage={sgstPercentage}
@@ -364,28 +166,19 @@ export default function InvoiceForm() {
           onSgstChange={setSgstPercentage}
           totals={totals}
         />
-      </div>
 
-      <div className="flex gap-4 justify-end mt-8">
-        <button
-          onClick={handleAutoSave}
-          className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          <Save size={20} />
-          Save Draft
-        </button>
-        <button
-          onClick={handleGeneratePDF}
-          disabled={isGenerating}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors ${isGenerating
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-green-600 hover:bg-green-700 text-white'
-            } `}
-        >
-          <Download size={20} />
-          {isGenerating ? 'Generating...' : 'Generate PDF'}
-        </button>
+        <div className="flex justify-end pt-4 pb-12">
+          <button
+            onClick={handleGeneratePDF}
+            disabled={isGenerating}
+            className={`flex items-center gap-3 px-8 py-4 bg-blue-600 dark:bg-blue-500 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 transform transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${isGenerating ? 'animate-pulse' : ''
+              }`}
+          >
+            <Download size={24} />
+            {isGenerating ? 'Generating PDF...' : 'Generate & Save Invoice'}
+          </button>
+        </div>
       </div>
     </div>
   );
-}
+};

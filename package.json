@@ -1,7 +1,7 @@
 {
   "name": "invoice-generator-desktop",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Desktop Invoice Generator for Apex Solar - Built with Tauri",
   "author": "Apex Solar",
@@ -17,11 +17,15 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.5.3",
+    "@types/react-virtualized-auto-sizer": "^1.0.4",
+    "@types/react-window": "^1.8.8",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-virtualized-auto-sizer": "^2.0.2",
+    "react-window": "^2.2.5",
     "tauri-plugin-sql-api": "file:src-tauri/plugins-workspace/plugins/sql"
   },
   "devDependencies": {
