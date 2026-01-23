@@ -64,3 +64,4 @@ docs/
 # IDEs
 .agent/
 .github/copilot-instructions.md
+src-tauri/WebView2Loader.dll
