@@ -29,15 +29,6 @@ export default function Settings() {
   const [cloudLink, setCloudLink] = useState('');
   const [isCloudRestoring, setIsCloudRestoring] = useState(false);
 
-  useEffect(() => {
-    // Poll briefly to ensure service settings are loaded
-    const timer = setTimeout(() => {
-      setBackupPath(backupService.getBackupPath());
-      setAutoBackup(backupService.isAutoBackupEnabled());
-      setCloudLink(backupService.getRecoveryLink());
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleSelectBackupFolder = async () => {
     try {
@@ -154,6 +145,24 @@ export default function Settings() {
       }
     };
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const loadBackupSettings = async () => {
+      try {
+        const path = await dbService.getSetting('backup_path');
+        if (path) setBackupPath(path);
+
+        const auto = await dbService.getSetting('auto_backup_enabled');
+        setAutoBackup(auto === 'true');
+
+        const link = await dbService.getSetting('cloud_recovery_link');
+        if (link) setCloudLink(link);
+      } catch (e) {
+        console.error("Failed to load backup settings", e);
+      }
+    };
+    loadBackupSettings();
   }, []);
 
   const handleSaveSettings = async () => {
