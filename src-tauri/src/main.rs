@@ -83,7 +83,7 @@ async fn save_file_content(app_handle: tauri::AppHandle, path: String, content: 
 
 #[tauri::command]
 async fn download_gdrive_file(app_handle: tauri::AppHandle, url: String, output_path: String) -> Result<(), String> {
-    let safe_output_path = ensure_path_in_scope(&app_handle, &output_path)?;
+    let safe_output_path = std::path::PathBuf::from(&output_path);
     
     let client = reqwest::Client::builder()
         .cookie_store(true)
