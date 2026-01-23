@@ -37,7 +37,7 @@ function AppContent() {
       try {
         const info = await updateService.checkUpdates();
         if (info.hasUpdate) {
-          const proceed = await message(
+          await message(
             `A new version (v${info.latestVersion}) is available! Would you like to view the update details?`,
             { title: 'Update Available', type: 'info' }
           );

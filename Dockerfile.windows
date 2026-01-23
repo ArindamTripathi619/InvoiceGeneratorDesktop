@@ -1,0 +1,61 @@
+FROM ubuntu:22.04
+
+# Avoid interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install base dependencies
+RUN apt-get update && \
+    apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    libgtk-3-dev \
+    libwebkit2gtk-4.0-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev \
+    wget \
+    nsis \
+    msitools \
+    gcc-mingw-w64 \
+    g++-mingw-w64 \
+    pkg-config
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Add Windows target
+RUN rustup target add x86_64-pc-windows-gnu
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy everything else
+# Copy everything else
+COPY . .
+
+# Download WebView2Loader.dll (x64) and place it in a safe location
+# We use unzip to extract it from the NuGet package
+RUN apt-get update && apt-get install -y unzip && \
+    wget https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2 -O webview2.nupkg && \
+    unzip webview2.nupkg -d webview2_temp && \
+    mkdir -p /libs && \
+    cp webview2_temp/build/native/x64/WebView2Loader.dll /libs/ && \
+    rm -rf webview2.nupkg webview2_temp
+
+# Set Tauri environment
+ENV TAURI_PLATFORM=windows
+ENV TAURI_ARCH=x86_64
+
+# Use GNU target for cross-compilation
+# We copy the DLL to the mounted volume at runtime AND force a frontend build
+CMD sh -c "cp /libs/WebView2Loader.dll src-tauri/ && npm run build && npm run tauri build -- --target x86_64-pc-windows-gnu"
